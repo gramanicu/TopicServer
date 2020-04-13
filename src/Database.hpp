@@ -25,8 +25,8 @@
 namespace TopicServer {
 /**
  * @brief This class manages the database of the application
- * Users (CLIENT_ID's) and their data, topic data, and some other
- * data used by the application
+ * Users (CLIENT_ID's) and their data, topic data, and some other data used by
+ * the application
  */
 class Database {};
 };  // namespace TopicServer
