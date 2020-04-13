@@ -13,7 +13,6 @@ int main() {
     // Add tests to be run
     tests.push_back(new testing::DatabaseTest());
 
-
     // Do not change code from here
     unsigned int cTest = 0;
     for (auto& i : tests) {

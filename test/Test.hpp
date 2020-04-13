@@ -23,9 +23,12 @@
 #include <iostream>
 #include <string>
 
-#define ASSERT_TRUE(statement, message) testing::Test::run_test(statement, message);
-#define ASSERT_FALSE(statement, message) testing::Test::run_test(!statement, message);
-#define ASSERT_EQUALS(first, second, message) testing::Test::run_test(first==second, message);
+#define ASSERT_TRUE(statement, message) \
+    testing::Test::run_test(statement, message);
+#define ASSERT_FALSE(statement, message) \
+    testing::Test::run_test(!statement, message);
+#define ASSERT_EQUALS(first, second, message) \
+    testing::Test::run_test(first == second, message);
 
 namespace testing {
 /**
@@ -45,7 +48,7 @@ class Test {
      * @return true
      * @return false
      */
-    bool run_test(bool test_result, std::string fail_message) {
+    bool run_test(const bool test_result, const std::string fail_message) {
         if (!test_result) {
             std::cerr << fail_message << "\n";
             return false;
