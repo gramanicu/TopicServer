@@ -27,6 +27,7 @@ run: clean build
 
 # Test the project
 test: $(OBJ)
+	mkdir -p test
 	@$(CC) -o ./test/$(EXE) $^ $(CFLAGS) ||:
 	-@rm -f $(OBJ) ||:
 	./test/$(EXE)
