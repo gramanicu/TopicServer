@@ -25,6 +25,13 @@ build: $(OBJ)
 run: clean build
 	./$(EXE)
 
+# Test the project
+test: $(OBJ)
+	@$(CC) -o ./test/$(EXE) $^ $(CFLAGS) ||:
+	-@rm -f $(OBJ) ||:
+	./test/$(EXE)
+
+
 # Deletes the binary and object files
 clean:
 	rm -f $(EXE) $(OBJ) TopicServer.zip

@@ -1,0 +1,4 @@
+dist: xenial
+sudo: false
+language: cpp
+script: make test
