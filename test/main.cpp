@@ -50,6 +50,8 @@ int main() {
         } else {
             return -1;
         }
+    } else {
+        std::cout << "No test to be run\n";
+        return 0;
     }
-    return 0;
 }

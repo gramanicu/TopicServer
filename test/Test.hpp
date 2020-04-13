@@ -48,7 +48,7 @@ class Test {
      * @return true
      * @return false
      */
-    bool run_test(const bool test_result, const std::string fail_message) {
+    bool run_test(const bool test_result, const std::string& fail_message) {
         if (!test_result) {
             std::cerr << fail_message << "\n";
             return false;
