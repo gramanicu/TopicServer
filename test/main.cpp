@@ -5,6 +5,7 @@
 /**
  * @brief Runs the tests
  * Will print how many tests passed.
+ * @return int 0 if no tests failed, -1 if any test failed
  */
 int main() {
     std::vector<testing::Test*> tests;
@@ -22,5 +23,9 @@ int main() {
     }
 
     std::cout << "Passed " << cTest << "/" << tests.size() << " tests!\n";
-    return 0;
+    if (cTest == tests.size()) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
