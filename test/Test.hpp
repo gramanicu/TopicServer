@@ -19,17 +19,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #pragma once
+#include <iostream>
+#include <string>
 
-namespace application {
+#define ASSERT_TRUE(statement, message) testing::Test::run_test(statement, message);
+#define ASSERT_FALSE(statement, message) testing::Test::run_test(!statement, message);
+#define ASSERT_EQUALS(first, second, message) testing::Test::run_test(first==second, message);
+
+namespace testing {
 /**
- * @brief This class manages the database of the application
- * Users (CLIENT_ID's) and their data, topic data, and some other data used by
- * the application
+ * @brief An abstract class used for tests
  */
-class Database {
+class Test {
    public:
-    bool test() { return false; }
+    virtual ~Test() {}
+    virtual bool run_tests() = 0;
+
+   protected:
+    /**
+     * @brief Run a test. If it returns false, print the fail_message
+     * Will return the test result.
+     * @param test_result The result of a test
+     * @param fail_message The message to show if the test failed
+     * @return true
+     * @return false
+     */
+    bool run_test(bool test_result, std::string fail_message) {
+        if (!test_result) {
+            std::cout << fail_message << "\n";
+            return false;
+        }
+        return true;
+    }
 };
-}  // namespace application
+}  // namespace testing

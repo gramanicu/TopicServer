@@ -7,31 +7,33 @@
 CC = g++
 CFLAGS = -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
 EXE = TopicServer
-SRC = $(wildcard */*.cpp)
+SRC = $(wildcard src/*.cpp)
+TST = $(wildcard test/*.cpp)
 OBJ = $(SRC:.cpp=.o)
+TOBJ = $(TST:.cpp=.o)
+INCLUDE = src
 
 # Compiles the program
 build: $(OBJ)
 	$(info Compiling code...)
-	@$(CC) -o $(EXE) $^ $(CFLAGS) ||:
+	@$(CC) -I$(INCLUDE) -o $(EXE) $^ $(CFLAGS) ||:
 	$(info Compilation successfull)
 	-@rm -f *.o ||:
 	@$(MAKE) -s gitignore ||:
 
 %.o: %.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) 
+	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
 # Executes the binary
 run: clean build
 	./$(EXE)
 
 # Test the project
-test: $(OBJ)
+test: $(TOBJ)
 	mkdir -p test
-	@$(CC) -o ./test/$(EXE) $^ $(CFLAGS) ||:
-	-@rm -f $(OBJ) ||:
+	@$(CC) -I$(INCLUDE) -o ./test/$(EXE) $^ $(CFLAGS) ||:
+	-@rm -f $(TOBJ) ||:
 	./test/$(EXE)
-
 
 # Deletes the binary and object files
 clean:

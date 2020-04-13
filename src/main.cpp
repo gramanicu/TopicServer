@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main() { 
+int main() {
     std::cout << "All is ok !\n";
-    return 0; 
+    return 0;
 }

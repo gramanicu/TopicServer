@@ -21,15 +21,24 @@
  */
 
 #pragma once
+#include "Database.hpp"
+#include "Test.hpp"
 
-namespace application {
-/**
- * @brief This class manages the database of the application
- * Users (CLIENT_ID's) and their data, topic data, and some other data used by
- * the application
- */
-class Database {
+namespace testing {
+class DatabaseTest : public Test {
    public:
-    bool test() { return false; }
+    bool run_tests() { return test_default() && test_another(); }
+
+   private:
+    application::Database db;
+
+    bool test_default() {
+        return ASSERT_EQUALS(
+            db.test(),
+            true,
+            "Database test function doesn't return the expected result");
+    }
+
+    bool test_another() { return true; }
 };
-}  // namespace application
+}  // namespace testing
