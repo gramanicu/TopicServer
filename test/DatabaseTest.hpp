@@ -33,7 +33,7 @@ class DatabaseTest : public Test {
     application::Database db;
 
     bool test_default() {
-        return ASSERT_FALSE(
+        return ASSERT_TRUE(
             db.test(),
             "Database test function doesn't return the expected result");
     }
