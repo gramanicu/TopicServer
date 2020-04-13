@@ -27,17 +27,58 @@
 namespace testing {
 class DatabaseTest : public Test {
    public:
-    bool run_tests() { return test_default() && test_another(); }
+    bool run_tests() {
+        return test_newfolder() && test_newfile() && test_deletefile() &&
+               test_deletefolder();
+    }
 
    private:
     application::Database db;
 
-    bool test_default() {
-        return ASSERT_TRUE(
-            db.test(),
-            "Database test function doesn't return the expected result");
+    bool test_newfolder() {
+        std::string name = "./tfolder/t1/t2/t3/t4/";
+        db.createDirectory(name);
+
+        struct stat buffer;
+        stat(name.c_str(), &buffer);
+        return ASSERT_TRUE(S_ISDIR(buffer.st_mode),
+                           "Folder structure was not created!\n");
     }
 
-    bool test_another() { return true; }
+    bool test_newfile() {
+        std::string name = "./tfolder/t1/t2/t3/t4/t5/file.txt";
+        db.createFile(name);
+
+        struct stat buffer;
+        stat(name.c_str(), &buffer);
+        return ASSERT_TRUE(S_ISREG(buffer.st_mode),
+                           "File/Folders were not created!\n");
+    }
+
+    bool test_deletefile() {
+        std::string name = "./tfolder/t1/t2/t3/t4/t5/file.txt";
+        db.deleteFile(name);
+
+        struct stat buffer;
+        stat(name.c_str(), &buffer);
+        return ASSERT_FALSE(S_ISREG(buffer.st_mode), "File was not deleted!\n");
+    }
+
+    bool test_deletefolder() {
+        std::string name = "./tfolder/";
+        // db.deleteDirectory(name);
+        db.deleteDirectory("./tfolder/t1/t2/t3/t4/t5/");
+        db.deleteDirectory("./tfolder/t1/t2/t3/t4/");
+        db.deleteDirectory("./tfolder/t1/t2/t3/");
+        db.deleteDirectory("./tfolder/t1/t2/");
+        db.deleteDirectory("./tfolder/t1/t2/");
+        db.deleteDirectory("./tfolder/t1/");
+        db.deleteDirectory("./tfolder/");
+
+        struct stat buffer;
+        stat(name.c_str(), &buffer);
+        return ASSERT_FALSE(S_ISDIR(buffer.st_mode),
+                            "Folder structure was not deleted!\n");
+    }
 };
 }  // namespace testing
