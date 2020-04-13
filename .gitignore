@@ -1,0 +1,3 @@
+TopicServer
+src/*.o
+.vscode*
