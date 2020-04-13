@@ -33,9 +33,8 @@ class DatabaseTest : public Test {
     application::Database db;
 
     bool test_default() {
-        return ASSERT_EQUALS(
+        return ASSERT_FALSE(
             db.test(),
-            true,
             "Database test function doesn't return the expected result");
     }
 

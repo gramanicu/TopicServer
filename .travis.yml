@@ -1,5 +1,6 @@
 os: linux
 dist: bionic
-root: false
 language: cpp
 script: make test
+notifications:
+    email: false

@@ -30,6 +30,6 @@ namespace application {
  */
 class Database {
    public:
-    bool test() { return false; }
+    bool test() { return true; }
 };
 }  // namespace application
