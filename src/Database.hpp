@@ -32,6 +32,7 @@
 #include <stack>
 
 namespace application {
+
 /**
  * @brief This class manages the database of the application
  * Users (CLIENT_ID's) and their data, topic data, and some other data used by
@@ -49,6 +50,7 @@ class Database {
         if (mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH) != 0) {
             std::cout << "Folder creation failed (" << __FILE__ << ":"
                       << __LINE__ << "): " << std::strerror(errno) << "\n";
+            exit(1);
         }
     }
 
@@ -83,17 +85,22 @@ class Database {
 
     // Removes a file at the specified path
     void _removeFile(const std::string& _path) {
+        // TODO - if file does not exist, ignore
         if (unlink(_path.c_str()) != 0) {
             std::cout << "File removal failed (" << __FILE__ << ":" << __LINE__
                       << "): " << std::strerror(errno) << "\n";
+            exit(1);
         }
     }
 
     // Remove a folder from the specified path
     void _removeFolder(const std::string& _path) {
+        // TODO - if file does not exist, ignore
         if (rmdir(_path.c_str()) != 0) {
+            std::cout << _path << "\n";
             std::cout << "Directory removal failed (" << __FILE__ << ":"
                       << __LINE__ << "): " << std::strerror(errno) << "\n";
+            exit(1);
         }
     }
 
@@ -156,9 +163,8 @@ class Database {
      * @param _path
      */
     void deleteDirectory(const std::string& _path) {
-
         // TODO - search recursively
-        
+
         char* path = (char*)malloc((_path.size() + 1) * sizeof(char));
         memcpy(path, _path.c_str(), (_path.size() + 1) * sizeof(char));
 

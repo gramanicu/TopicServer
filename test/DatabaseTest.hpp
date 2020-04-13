@@ -71,7 +71,6 @@ class DatabaseTest : public Test {
         db.deleteDirectory("./tfolder/t1/t2/t3/t4/");
         db.deleteDirectory("./tfolder/t1/t2/t3/");
         db.deleteDirectory("./tfolder/t1/t2/");
-        db.deleteDirectory("./tfolder/t1/t2/");
         db.deleteDirectory("./tfolder/t1/");
         db.deleteDirectory("./tfolder/");
 
