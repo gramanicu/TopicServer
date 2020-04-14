@@ -25,34 +25,9 @@
 #include "Utils.hpp"
 
 namespace application {
-struct Message {
-    // Number = value  (sign == 0)
-    //        = -value (sign == 1)
-    typedef struct {
-        bint sign;
-        uint value;
-    } TCP_INT;
-
-    // Number = value * 100
-    typedef struct {
-        sint value;
-    } TCP_SHORT_REAL;
-
-    // Number = value * (10 ^ exponent)  (sign == 0)
-    //        = -value * (10 ^ exponent) (sign == 1)
-    typedef struct {
-        bint sign;
-        uint value;
-        bint exponent;
-    } TCP_FLOAT;
-
-    // Maximum 1500 bytes string
-    typedef struct {
-        char payload[MAX_TCP_PAYLOAD];
-    } TCP_STRING;
-
-    lint topic;
-    tcp_message_type type;
-    char payload[MAX_TCP_PAYLOAD];
+struct udp_message {
+    char topic[TOPIC_LENGTH];
+    bint type;
+    char payload[PAYLOAD_MAX_SIZE];
 };
 }  // namespace application

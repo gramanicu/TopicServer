@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 #include "Database.hpp"
-#include "Message.hpp"
+#include "Messages.hpp"
 #include "User.hpp"
 
 namespace application {
@@ -63,21 +63,57 @@ class Server {
         FD_SET(STDIN_FILENO, &read_fds);
     }
 
+    /**
+     * @brief Read and execute commands from STDIN
+     */
     void read_input() {
         std::string command;
         std::cin >> command;
 
         if (command == "exit") {
-            // Close all clients
+            // TODO - Close all clients
             exit(0);
         }
     }
 
-    void read_udp_message() {}
+    void read_udp_message() {
+        // Accept the "connection"
+        udp_message msg;
+        sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        char buffer[UDP_MSG_SIZE];
+        bzero(buffer, UDP_MSG_SIZE);
 
-    void read_tcp_message() {}
+        int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
+                                (sockaddr*)&client_addr, &client_len);
 
-    void accept_connection() {}
+
+        if (udp_msg_size == UDP_MSG_SIZE) {
+            memcpy(&msg, buffer, udp_msg_size);
+            std::cout << msg.topic << " " << (int)msg.type << "\n";
+            std::cout << msg.payload << "\n";
+        }
+    }
+
+    void read_tcp_message() {
+        // TODO - look into fork() - found here
+        // https://www.geeksforgeeks.org/tcp-and-udp-server-using-select/
+    }
+
+    void accept_connection() {
+        // Accept the new connection
+        sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int new_sockfd =
+            accept(main_tcp_sock, (sockaddr*)&client_addr, &client_len);
+        CERR(new_sockfd < 0);
+
+        // Add the new socket
+        FD_SET(new_sockfd, &read_fds);
+        max_fd = std::max(max_fd, (uint)new_sockfd);
+
+        // TODO - If new client, save, else, make online
+    }
 
    public:
     /**
@@ -125,11 +161,11 @@ class Server {
                     if (i == STDIN_FILENO) {
                         read_input();
                     } else if (i == main_tcp_sock) {
-                        // New TCP connection
+                        accept_connection();
                     } else if (i == udp_sock) {
-                        // New UDP message
+                        read_udp_message();
                     } else if (i != STDOUT_FILENO && i != STDERR_FILENO) {
-                        // New TCP message
+                        read_tcp_message();
                     }
                 }
             }

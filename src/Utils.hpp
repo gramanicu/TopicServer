@@ -30,10 +30,6 @@
 
 #define FOREVER while (1)
 
-#define MAX_CLIENTS UINT32_MAX
-#define MAX_TCP_PAYLOAD 1500
-#define MAX_STDIN_COMMAND 100
-
 /**
  * @brief Check if the condition is met. If it doesn't, print message and exit
  */
@@ -52,4 +48,11 @@
                   << std::strerror(errno) << "\n";        \
     }
 
-enum tcp_message_type { INT, SHORT_REAL, FLOAT, STRING };
+// Server constants
+#define MAX_CLIENTS UINT32_MAX
+#define MAX_STDIN_COMMAND 100
+
+// Message constants
+#define TOPIC_LENGTH 50
+#define PAYLOAD_MAX_SIZE 1500
+#define UDP_MSG_SIZE 1551
