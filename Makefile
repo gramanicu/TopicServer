@@ -5,7 +5,7 @@
 
 # Compilation variables
 CC = g++
-CFLAGS = -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
+CFLAGS = -lstdc++fs -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
 EXE = TopicServer
 SRC = $(wildcard src/*.cpp)
 TST = $(wildcard test/*.cpp)
@@ -30,7 +30,6 @@ run: clean build
 
 # Test the project
 test: $(TOBJ)
-	mkdir -p test
 	@$(CC) -I$(INCLUDE) -o ./test/$(EXE) $^ $(CFLAGS) ||:
 	-@rm -f $(TOBJ) ||:
 	./test/$(EXE)

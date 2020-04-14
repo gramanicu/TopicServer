@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <vector>
-#include "DatabaseTest.hpp"
+#include "FilesystemTest.hpp"
 
 /**
  * @brief Runs the tests
@@ -33,7 +33,7 @@ int main() {
     std::vector<testing::Test*> tests;
 
     // Add tests to be run
-    tests.push_back(new testing::DatabaseTest());
+    tests.push_back(new testing::FilesystemTest());
 
     // Do not change code from here
     // If it has any tests to run

@@ -21,23 +21,23 @@
  */
 
 #pragma once
-#include "Database.hpp"
+#include "Filesystem.hpp"
 #include "Test.hpp"
 
 namespace testing {
-class DatabaseTest : public Test {
+class FilesystemTest : public Test {
    public:
     bool run_tests() {
         return test_newfolder() && test_newfile() && test_deletefile() &&
-               test_deletefolder();
+               test_deletefolder() && test_path();
     }
 
    private:
-    application::Database db;
+    application::Filesystem fs;
 
     bool test_newfolder() {
-        std::string name = "./tfolder/t1/t2/t3/t4/";
-        db.createDirectory(name);
+        std::string name = "./tfolder/t1/t2/t3/t4";
+        fs.createDirectory(name);
 
         struct stat buffer;
         stat(name.c_str(), &buffer);
@@ -47,7 +47,7 @@ class DatabaseTest : public Test {
 
     bool test_newfile() {
         std::string name = "./tfolder/t1/t2/t3/t4/t5/file.txt";
-        db.createFile(name);
+        fs.createFile(name);
 
         struct stat buffer;
         stat(name.c_str(), &buffer);
@@ -57,7 +57,7 @@ class DatabaseTest : public Test {
 
     bool test_deletefile() {
         std::string name = "./tfolder/t1/t2/t3/t4/t5/file.txt";
-        db.deleteFile(name);
+        fs.deleteFile(name);
 
         struct stat buffer;
         stat(name.c_str(), &buffer);
@@ -65,19 +65,29 @@ class DatabaseTest : public Test {
     }
 
     bool test_deletefolder() {
-        std::string name = "./tfolder/";
-        // db.deleteDirectory(name);
-        db.deleteDirectory("./tfolder/t1/t2/t3/t4/t5/");
-        db.deleteDirectory("./tfolder/t1/t2/t3/t4/");
-        db.deleteDirectory("./tfolder/t1/t2/t3/");
-        db.deleteDirectory("./tfolder/t1/t2/");
-        db.deleteDirectory("./tfolder/t1/");
-        db.deleteDirectory("./tfolder/");
+        std::string name = "./tfolder";
+        fs.deleteDirectory(name);
 
         struct stat buffer;
         stat(name.c_str(), &buffer);
         return ASSERT_FALSE(S_ISDIR(buffer.st_mode),
                             "Folder structure was not deleted!\n");
+    }
+
+    bool test_path() {
+        std::string name = "./src";
+        std::string name1 = "./.github/workflows/test.yml";
+        std::string name2 = "/home/";
+        std::string name3 = "/root";
+        std::string name4 = "/abcdefgh";
+
+        return ASSERT_TRUE(fs.checkPath(name), "The path should be valid") &&
+               ASSERT_TRUE(fs.checkPath(name1), "The path should be valid") &&
+               ASSERT_FALSE(fs.checkPath(name2),
+                            "The path should not be accessible") &&
+               ASSERT_FALSE(fs.checkPath(name3),
+                            "The path should not be accessible") &&
+               ASSERT_FALSE(fs.checkPath(name4), "The path should not exist");
     }
 };
 }  // namespace testing

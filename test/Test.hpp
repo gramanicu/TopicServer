@@ -24,11 +24,11 @@
 #include <string>
 
 #define ASSERT_TRUE(statement, message) \
-    testing::Test::run_test(statement, message);
+    testing::Test::run_test(statement, message)
 #define ASSERT_FALSE(statement, message) \
-    testing::Test::run_test(!statement, message);
+    testing::Test::run_test(!statement, message)
 #define ASSERT_EQUALS(first, second, message) \
-    testing::Test::run_test(first == second, message);
+    testing::Test::run_test(first == second, message)
 
 namespace testing {
 /**
