@@ -18,29 +18,32 @@ TOBJ = $(TST:.cpp=.o)
 # Compiles the programs
 build: $(OBJ)
 	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
-	$(CC) -I$(INCLUDE) -o client ./src/Client.o $(CFLAGS) 
-	rm -f $(OBJ)
+	$(CC) -I$(INCLUDE) -o client ./src/Client.o $(CFLAGS)
+	-@rm -f $(OBJ)
 
 # Runs the server
 run_server: clean build
 	./server
+	-@rm -f server client
 
 # Runs the server
 run_client: clean build
 	./client
+	-@rm -f server client
 
 # Test the project
 test: $(TOBJ)
 	@$(CC) -I$(INCLUDE) -o $(TEXE) $^ $(CFLAGS) ||:
 	-@rm -f $(TOBJ) ||:
-	$(TEXE)
+	$(TEXE) ||:
+	-@rm -f $(TEXE) ||:
 
 %.o: %.cpp
 	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
 # Deletes the binary and object files
 clean:
-	rm -f $(EXE) $(OBJ) TopicServer.zip
+	rm -f server client $(OBJ) TopicServer.zip
 	echo "Deleted the binary and object files"
 
 # Automatic coding style, in my personal style
@@ -55,7 +58,7 @@ memory:clean build
 
 # Adds and updates gitignore rules
 gitignore:
-	@echo "$(TEXE)" > .gitignore ||:
+	@echo "test/tester" > .gitignore ||:
 	@echo "src/*.o" >> .gitignore ||:
 	@echo ".vscode*" >> .gitignore ||:	
 	echo "Updated .gitignore"
