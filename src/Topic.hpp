@@ -20,41 +20,13 @@
  * SOFTWARE.
  */
 
-#include <iostream>
+#pragma once
+
 #include <vector>
-#include "FilesystemTest.hpp"
-#include "UserTest.hpp"
+#include "Utils.hpp"
 
-/**
- * @brief Runs the tests
- * Will print how many tests passed.
- * @return int 0 if no tests failed, -1 if any test failed
- */
-int main() {
-    std::vector<testing::Test*> tests;
+#define MAX_TOPIC_LINES 10000
 
-    // Add tests to be run
-    tests.push_back(new testing::FilesystemTest());
-    tests.push_back(new testing::UserTest());
-
-    // Do not change code from here
-    // If it has any tests to run
-    if (tests.size() > 0) {
-        unsigned int cTest = 0;
-        for (auto& i : tests) {
-            if (i->run_tests()) {
-                cTest++;
-            }
-        }
-
-        std::cout << "Passed " << cTest << "/" << tests.size() << " tests!\n";
-        if (cTest == tests.size()) {
-            return 0;
-        } else {
-            return -1;
-        }
-    } else {
-        std::cout << "No test to be run\n";
-        return 0;
-    }
-}
+namespace application {
+class Topic {};
+}  // namespace application

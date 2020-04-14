@@ -20,41 +20,14 @@
  * SOFTWARE.
  */
 
-#include <iostream>
-#include <vector>
-#include "FilesystemTest.hpp"
-#include "UserTest.hpp"
+#pragma once
 
-/**
- * @brief Runs the tests
- * Will print how many tests passed.
- * @return int 0 if no tests failed, -1 if any test failed
- */
-int main() {
-    std::vector<testing::Test*> tests;
+#define lint __UINT_FAST64_TYPE__  // Long Int
+#define uint __UINT_FAST32_TYPE__  // Unsigned Int
+#define sint __UINT_FAST16_TYPE__  // Short Int
+#define bint __UINT_FAST8_TYPE__   // Byte Int
+#define uchar unsigned char
 
-    // Add tests to be run
-    tests.push_back(new testing::FilesystemTest());
-    tests.push_back(new testing::UserTest());
+#define MAX_TCP_PAYLOAD 1500
 
-    // Do not change code from here
-    // If it has any tests to run
-    if (tests.size() > 0) {
-        unsigned int cTest = 0;
-        for (auto& i : tests) {
-            if (i->run_tests()) {
-                cTest++;
-            }
-        }
-
-        std::cout << "Passed " << cTest << "/" << tests.size() << " tests!\n";
-        if (cTest == tests.size()) {
-            return 0;
-        } else {
-            return -1;
-        }
-    } else {
-        std::cout << "No test to be run\n";
-        return 0;
-    }
-}
+enum tcp_message_type { INT, SHORT_REAL, FLOAT, STRING };

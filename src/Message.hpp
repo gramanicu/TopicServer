@@ -20,41 +20,39 @@
  * SOFTWARE.
  */
 
-#include <iostream>
-#include <vector>
-#include "FilesystemTest.hpp"
-#include "UserTest.hpp"
+#pragma once
 
-/**
- * @brief Runs the tests
- * Will print how many tests passed.
- * @return int 0 if no tests failed, -1 if any test failed
- */
-int main() {
-    std::vector<testing::Test*> tests;
+#include "Utils.hpp"
 
-    // Add tests to be run
-    tests.push_back(new testing::FilesystemTest());
-    tests.push_back(new testing::UserTest());
+namespace application {
+struct Message {
+    // Number = value  (sign == 0)
+    //        = -value (sign == 1)
+    typedef struct {
+        bint sign;
+        uint value;
+    } TCP_INT;
 
-    // Do not change code from here
-    // If it has any tests to run
-    if (tests.size() > 0) {
-        unsigned int cTest = 0;
-        for (auto& i : tests) {
-            if (i->run_tests()) {
-                cTest++;
-            }
-        }
+    // Number = value * 100
+    typedef struct {
+        sint value;
+    } TCP_SHORT_REAL;
 
-        std::cout << "Passed " << cTest << "/" << tests.size() << " tests!\n";
-        if (cTest == tests.size()) {
-            return 0;
-        } else {
-            return -1;
-        }
-    } else {
-        std::cout << "No test to be run\n";
-        return 0;
-    }
-}
+    // Number = value * (10 ^ exponent)  (sign == 0)
+    //        = -value * (10 ^ exponent) (sign == 1)
+    typedef struct {
+        bint sign;
+        uint value;
+        bint exponent;
+    } TCP_FLOAT;
+
+    // Maximum 1500 bytes string
+    typedef struct {
+        char payload[MAX_TCP_PAYLOAD];
+    } TCP_STRING;
+
+    lint topic;
+    tcp_message_type type;
+    char payload[MAX_TCP_PAYLOAD];
+};
+}  // namespace application
