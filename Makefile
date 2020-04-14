@@ -15,21 +15,25 @@ TEXE = ./test/tester
 TST = $(wildcard test/*.cpp)
 TOBJ = $(TST:.cpp=.o)
 
+IP = 127.0.0.1
+PORT = 8080
+USERNAME = Rockyn
+
 # Compiles the programs
 build: $(OBJ)
 	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
-	$(CC) -I$(INCLUDE) -o client ./src/Client.o $(CFLAGS)
+	$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
 	-@rm -f $(OBJ)
 
 # Runs the server
 run_server: clean build
-	./server
-	-@rm -f server client
+	./server $(PORT)
+	-@rm -f server subscriber
 
 # Runs the server
-run_client: clean build
-	./client
-	-@rm -f server client
+run_subscriber: clean build
+	./subscriber $(USERNAME) $(IP) $(PORT)
+	-@rm -f server subscriber
 
 # Test the project
 test: $(TOBJ)
@@ -43,7 +47,7 @@ test: $(TOBJ)
 
 # Deletes the binary and object files
 clean:
-	rm -f server client $(OBJ) TopicServer.zip
+	rm -f server subscriber $(OBJ) TopicServer.zip
 	echo "Deleted the binary and object files"
 
 # Automatic coding style, in my personal style

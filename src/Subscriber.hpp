@@ -20,12 +20,13 @@
  * SOFTWARE.
  */
 
-#include "Client.hpp"
+#pragma once
 #include <iostream>
 
-int main(int argc, char *argv[]) {
-    application::Client client;
-    client.run();
-
-    return 0;
-}
+namespace application {
+class Subscriber {
+   private:
+   public:
+    void run() { std::cout << "Running subscriber\n"; }
+};
+}  // namespace application

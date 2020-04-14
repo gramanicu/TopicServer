@@ -22,9 +22,23 @@
 
 #include "Server.hpp"
 #include <iostream>
+#include <sstream>
+
+std::string require_params() {
+    std::stringstream ss;
+    ss << "Wrong parameters : ./server PORT\n";
+    return ss.str();
+}
 
 int main(int argc, char *argv[]) {
-    application::Server server;
+    // Check if the PORT parameter was specified
+    MUST(argc == 2, require_params());
+
+    // Checks if the port provided is an actual number
+    uint port = atoi(argv[1]);
+    MUST(port, require_params());
+
+    application::Server server(port);
     server.run();
 
     return 0;

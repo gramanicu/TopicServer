@@ -49,7 +49,8 @@ class UserTest : public Test {
     }
 
     bool test_socket() {
-        return ASSERT_EQUALS(user.get_socket(), 10, "The user socket is not correct\n");
+        return ASSERT_EQUALS(user.get_socket(), 10,
+                             "The user socket is not correct\n");
     }
 
     bool test_subscribe() {
@@ -81,7 +82,8 @@ class UserTest : public Test {
     }
 
     bool test_id() {
-        return ASSERT_EQUALS(user.get_id(), "abcd", "The user id is not correct\n");
+        return ASSERT_EQUALS(user.get_id(), "abcd",
+                             "The user id is not correct\n");
     }
 };
 }  // namespace testing

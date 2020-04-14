@@ -28,6 +28,28 @@
 #define bint __UINT_FAST8_TYPE__   // Byte Int
 #define uchar unsigned char
 
+#define FOREVER while (1)
+
+#define MAX_CLIENTS UINT32_MAX
 #define MAX_TCP_PAYLOAD 1500
+#define MAX_STDIN_COMMAND 100
+
+/**
+ * @brief Check if the condition is met. If it doesn't, print message and exit
+ */
+#define MUST(condition, message) \
+    if (!(condition)) {          \
+        std::cerr << message;    \
+        exit(-1);                \
+    }
+
+/**
+ * @brief Check if the error happens. If it does, print it
+ */
+#define CERR(condition)                                   \
+    if (condition) {                                      \
+        std::cerr << __FILE__ << ", " << __LINE__ << ": " \
+                  << std::strerror(errno) << "\n";        \
+    }
 
 enum tcp_message_type { INT, SHORT_REAL, FLOAT, STRING };
