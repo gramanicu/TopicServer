@@ -20,12 +20,18 @@
  * SOFTWARE.
  */
 
-#include "Client.hpp"
+#pragma once
 #include <iostream>
+#include <string>
+#include <vector>
+#include "Database.hpp"
+#include "Message.hpp"
+#include "User.hpp"
 
-int main(int argc, char *argv[]) {
-    application::Client client;
-    client.run();
-
-    return 0;
-}
+namespace application {
+class Server {
+   private:
+   public:
+    void run() { std::cout << "Running server\n"; }
+};
+}  // namespace application

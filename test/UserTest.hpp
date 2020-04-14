@@ -30,7 +30,7 @@ class UserTest : public Test {
     bool run_tests() {
         return test_offline() && test_online() && test_id() &&
                test_subscribe() && test_store() && test_messages() &&
-               test_unsubscribe();
+               test_unsubscribe() && test_id();
     }
 
    private:
@@ -39,7 +39,7 @@ class UserTest : public Test {
     uint lastmessage = 128;
 
     bool test_offline() {
-        user = application::User(10, U_OFFLINE);
+        user = application::User("abcd", 10, U_OFFLINE);
         return ASSERT_FALSE(user.is_online(), "The user should be offline\n");
     }
 
@@ -48,8 +48,8 @@ class UserTest : public Test {
         return ASSERT_TRUE(user.is_online(), "The user should be online\n");
     }
 
-    bool test_id() {
-        return ASSERT_EQUALS(user.get_id(), 10, "The user id is not correct\n");
+    bool test_socket() {
+        return ASSERT_EQUALS(user.get_socket(), 10, "The user socket is not correct\n");
     }
 
     bool test_subscribe() {
@@ -78,6 +78,10 @@ class UserTest : public Test {
         return ASSERT_FALSE(
             user.is_subscribed(topic),
             "The user should no longer be subscribed to that topic\n");
+    }
+
+    bool test_id() {
+        return ASSERT_EQUALS(user.get_id(), "abcd", "The user id is not correct\n");
     }
 };
 }  // namespace testing

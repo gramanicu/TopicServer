@@ -11,7 +11,7 @@ INCLUDE = src
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 
-TEXE = TopicServer
+TEXE = ./test/tester
 TST = $(wildcard test/*.cpp)
 TOBJ = $(TST:.cpp=.o)
 
@@ -20,9 +20,6 @@ build: $(OBJ)
 	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
 	$(CC) -I$(INCLUDE) -o client ./src/Client.o $(CFLAGS) 
 	rm -f $(OBJ)
-
-%.o: %.cpp
-	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
 # Runs the server
 run_server: clean build
@@ -34,9 +31,12 @@ run_client: clean build
 
 # Test the project
 test: $(TOBJ)
-	@$(CC) -I$(INCLUDE) -o ./test/$(EXE) $^ $(CFLAGS) ||:
+	@$(CC) -I$(INCLUDE) -o $(TEXE) $^ $(CFLAGS) ||:
 	-@rm -f $(TOBJ) ||:
-	./test/$(EXE)
+	$(TEXE)
+
+%.o: %.cpp
+	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
 # Deletes the binary and object files
 clean:
@@ -55,7 +55,7 @@ memory:clean build
 
 # Adds and updates gitignore rules
 gitignore:
-	@echo "$(EXE)" > .gitignore ||:
+	@echo "$(TEXE)" > .gitignore ||:
 	@echo "src/*.o" >> .gitignore ||:
 	@echo ".vscode*" >> .gitignore ||:	
 	echo "Updated .gitignore"

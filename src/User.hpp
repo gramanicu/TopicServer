@@ -30,7 +30,8 @@ enum user_status { U_OFFLINE, U_ONLINE };
 namespace application {
 class User {
    private:
-    uint id;
+    std::string id;
+    uint socket;
     bint status;
 
     /**
@@ -45,13 +46,17 @@ class User {
 
    public:
     // Constructors
-    User() : id(0), status(U_OFFLINE) {}
-    User(const uint _id, const user_status status = U_OFFLINE)
-        : id(_id), status(status){};
+    User() : id(""), socket(0), status(U_OFFLINE) {}
+    explicit User(const std::string id, const uint socket,
+                  const user_status status = U_OFFLINE)
+        : id(id), socket(socket), status(status){};
 
     // Copy-Constructor
     User(const User& other)
-        : id(other.id), status(other.status), topics(other.topics) {}
+        : id(other.id),
+          socket(other.socket),
+          status(other.status),
+          topics(other.topics) {}
 
     /**
      * @brief Set the status of the user
@@ -87,11 +92,16 @@ class User {
 
     /**
      * @brief Get the id of the user
-     * As the user id will actually represent the socket-id of the connection,
-     * this is used to sent data to the user
      * @return uint The id of the user
      */
-    uint get_id() const { return id; }
+    std::string get_id() const { return id; }
+
+    /**
+     * @brief Get the socket on which this user is connected to the server
+     * The socket of the server
+     * @return uint The socket fd
+     */
+    uint get_socket() const { return socket; }
 
     /**
      * @brief Get the status of the user
