@@ -45,21 +45,13 @@ class User {
 
    public:
     // Constructors
-    User() {
-        // Try not to use the default constructor
-        id = 0;
-        status = U_OFFLINE;
-    }
-
+    User() : id(0), status(U_OFFLINE) {}
     User(const uint _id, const user_status status = U_OFFLINE)
         : id(_id), status(status){};
 
     // Copy-Constructor
-    User(const User& other) {
-        id = other.id;
-        status = other.status;
-        topics = other.topics;
-    }
+    User(const User& other)
+        : id(other.id), status(other.status), topics(other.topics) {}
 
     /**
      * @brief Set the status of the user

@@ -6,27 +6,31 @@
 # Compilation variables
 CC = g++
 CFLAGS = -lstdc++fs -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
-EXE = TopicServer
-SRC = $(wildcard src/*.cpp)
-TST = $(wildcard test/*.cpp)
-OBJ = $(SRC:.cpp=.o)
-TOBJ = $(TST:.cpp=.o)
 INCLUDE = src
 
-# Compiles the program
+SRC = $(wildcard src/*.cpp)
+OBJ = $(SRC:.cpp=.o)
+
+TEXE = TopicServer
+TST = $(wildcard test/*.cpp)
+TOBJ = $(TST:.cpp=.o)
+
+# Compiles the programs
 build: $(OBJ)
-	$(info Compiling code...)
-	@$(CC) -I$(INCLUDE) -o $(EXE) $^ $(CFLAGS) ||:
-	$(info Compilation successfull)
-	-@rm -f *.o ||:
-	@$(MAKE) -s gitignore ||:
+	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
+	$(CC) -I$(INCLUDE) -o client ./src/Client.o $(CFLAGS) 
+	rm -f $(OBJ)
 
 %.o: %.cpp
 	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
-# Executes the binary
-run: clean build
-	./$(EXE)
+# Runs the server
+run_server: clean build
+	./server
+
+# Runs the server
+run_client: clean build
+	./client
 
 # Test the project
 test: $(TOBJ)
