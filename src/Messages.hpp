@@ -23,11 +23,68 @@
 #pragma once
 
 #include "Utils.hpp"
+#include <iomanip>  
+
+#define UDP_INT_SIZE 56
+#define UDP_REAL_SIZE 53
+#define UDP_FLOAT_SIZE 57
 
 namespace application {
-struct udp_message {
+struct udp_header {
     char topic[TOPIC_LENGTH];
     bint type;
+};
+
+struct udp_int_msg {
+    udp_header hdr;
+    bint sign;
+    uint val;
+
+    std::string print() {
+        std::stringstream ss;
+        if (sign) {
+            ss << "-";
+        }
+        ss << ntohl(val);
+        return ss.str();
+    }
+};
+
+struct udp_real_msg {
+    udp_header hdr;
+    short val;
+
+    std::string print() {
+        std::stringstream ss;
+        float rez = (float) ((val));
+        rez /= 100;
+        ss << std::fixed << std::setprecision(2) << rez;
+        return ss.str();
+    }
+};
+
+struct udp_float_msg {
+    udp_header hdr;
+    bint sign;
+    uint val;
+    bint exp;
+
+    std::string print() {
+        std::stringstream ss;
+        float rez, pow = power(10, exp);
+        rez = (float) (ntohl(val));
+        rez /= pow;
+        if(sign) {
+            ss << "-";
+        }
+        ss << rez;
+        return ss.str();
+    }
+};
+
+struct udp_string_msg {
+    udp_header hdr;
     char payload[PAYLOAD_MAX_SIZE];
 };
+
 }  // namespace application

@@ -22,10 +22,10 @@
 
 #pragma once
 
-#define lint __UINT_FAST64_TYPE__  // Long Int
-#define uint __UINT_FAST32_TYPE__  // Unsigned Int
-#define sint __UINT_FAST16_TYPE__  // Short Int
-#define bint __UINT_FAST8_TYPE__   // Byte Int
+#define lint uint64_t  // Long Int
+#define uint uint32_t  // Unsigned Int
+#define sint uint16_t  // Short Int
+#define bint uint8_t   // Byte Int
 #define uchar unsigned char
 
 #define FOREVER while (1)
@@ -56,3 +56,20 @@
 #define TOPIC_LENGTH 50
 #define PAYLOAD_MAX_SIZE 1500
 #define UDP_MSG_SIZE 1551
+#define UDP_HDR_SIZE 51
+
+enum msg_type { INT, SHORT_REAL, FLOAT, STRING };
+
+// Compute power y of x in O(Log y)
+double power(int x, uint y) {
+    double res = 1.0;
+
+    while (y > 0) {
+        if (y & 1) {
+            res = res * x;
+        }
+        y = y >> 1;
+        x = x * x;
+    }
+    return res;
+}

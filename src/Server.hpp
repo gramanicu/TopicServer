@@ -78,20 +78,42 @@ class Server {
 
     void read_udp_message() {
         // Accept the "connection"
-        udp_message msg;
+        udp_header hdr;
         sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         char buffer[UDP_MSG_SIZE];
         bzero(buffer, UDP_MSG_SIZE);
 
         int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
-                                (sockaddr*)&client_addr, &client_len);
+                                    (sockaddr*)&client_addr, &client_len);
 
-
-        if (udp_msg_size == UDP_MSG_SIZE) {
-            memcpy(&msg, buffer, udp_msg_size);
-            std::cout << msg.topic << " " << (int)msg.type << "\n";
-            std::cout << msg.payload << "\n";
+        if (udp_msg_size > 0) {
+            memcpy(&hdr, buffer, UDP_HDR_SIZE);
+            switch (hdr.type) {
+                case INT: {
+                    udp_int_msg msg;
+                    bzero(&msg, UDP_INT_SIZE);
+                    memcpy(&msg, buffer, UDP_INT_SIZE);
+                    std::cout << msg.print() << "\n";
+                } break;
+                case SHORT_REAL: {
+                    udp_real_msg msg;
+                    bzero(&msg, UDP_REAL_SIZE);
+                    memcpy(&msg, buffer, UDP_REAL_SIZE);
+                    std::cout << msg.print() << "\n";
+                } break;
+                case FLOAT: {
+                    udp_float_msg msg;
+                    bzero(&msg, UDP_FLOAT_SIZE);
+                    memcpy(&msg, buffer, UDP_FLOAT_SIZE); 
+                    std::cout << msg.print() << "\n";
+                } break;
+                case STRING: {
+                    udp_string_msg msg;
+                    memcpy(&msg, buffer, udp_msg_size);
+                    std::cout << msg.payload << "\n";
+                }
+            }
         }
     }
 

@@ -71,3 +71,6 @@ gitignore:
 pack: clean
 	zip -FSr TopicServer.zip *
 
+udp_client:
+	python3 ./checker/udp_client.py --source-port 1234 --input_file ./checker/sample_payloads.json --delay 10 --mode all_once 127.0.0.1 8080
+
