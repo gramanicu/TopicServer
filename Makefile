@@ -64,7 +64,9 @@ memory:clean build
 gitignore:
 	@echo "test/tester" > .gitignore ||:
 	@echo "src/*.o" >> .gitignore ||:
-	@echo ".vscode*" >> .gitignore ||:	
+	@echo ".vscode*" >> .gitignore ||:
+	@echo "server" >> .gitignore ||:
+	@echo "subscriber" >> .gitignore ||:	
 	echo "Updated .gitignore"
 	
 # Creates an archive of the project
