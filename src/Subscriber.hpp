@@ -33,6 +33,15 @@ class Subscriber {
     std::string client_id;
 
     /**
+     * @brief Return the id of a topic
+     * Will return -1 if the id was not sent by the server and -2 if the topic
+     * was never subscribed to
+     * @param topic The topic we need the id for
+     * @return uint The id of the topic
+     */
+    int get_topic_id(std::string topic) { return 10; }
+
+    /**
      * @brief Clear the file descriptors
      */
     void clear_fds() {
@@ -53,7 +62,7 @@ class Subscriber {
         // Set the file descriptor for STDIN
         FD_SET(STDIN_FILENO, &read_fds);
 
-        // Send client info and wait for response
+        // Send client info
         char buffer[TCP_MSG_SIZE];
         bzero(buffer, TCP_MSG_SIZE);
         tcp_message msg;
@@ -81,17 +90,53 @@ class Subscriber {
         if (command == "exit") {
             return true;
         } else if (command == "subscribe") {
+            // Subscribe
             std::string topic;
             bool sf;
             // If the second argument is not a number, the value will be false
             // If the second argument is greater than 1, the value will be true
             std::cin >> topic >> sf;
 
-            // Subscribe
+            // Send the subscribe request
+            char buffer[TCP_MSG_SIZE];
+            bzero(buffer, TCP_MSG_SIZE);
+
+            tcp_message msg;
+            bzero(&msg, sizeof(msg));
+
+            tcp_subscribe data;
+            data.sf = sf;
+            strncpy(data.topic, topic.c_str(), topic.size());
+
+            msg.type = tcp_msg_type::SUBSCRIBE;
+            memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
+            memcpy(buffer, &msg, TCP_DATA_SUBSCRIBE + 1);
+
+            // Send the client info
+            CERR(send(sockfd, buffer, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
         } else if (command == "unsubscribe") {
             // Unsubscribe
             std::string topic;
             std::cin >> topic;
+
+            // Send client info
+            char buffer[TCP_MSG_SIZE];
+            bzero(buffer, TCP_MSG_SIZE);
+            tcp_message msg;
+            msg.type = tcp_msg_type::UNSUBSCRIBE;
+            tcp_unsubscribe data;
+
+            int id = get_topic_id(topic.c_str());
+            if (id == -1) {
+                std::cerr << "The server didn't set the id for that topic\n";
+            } else if (id >= 0) {
+                data.topic = id;
+                memcpy(msg.payload, &data, sizeof(data));
+                memcpy(buffer, &msg, TCP_MSG_SIZE);
+
+                // Send the client info
+                CERR(send(sockfd, buffer, strlen(buffer), 0) < 0);
+            }
         }
         return false;
     }
@@ -106,6 +151,12 @@ class Subscriber {
 
         // Clear the file descriptors sets
         clear_fds();
+
+        // Set the socket options
+        const int opt = 1;
+        MUST(
+            setsockopt(sockfd, SOL_SOCKET, TCP_NODELAY, &opt, sizeof(opt) == 0),
+            "Couldn't set socket options\n");
 
         // Set the server adress
         server_addr.sin_family = AF_INET;

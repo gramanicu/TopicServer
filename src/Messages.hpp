@@ -65,9 +65,7 @@ struct udp_int_msg {
     bint sign;
     uint val;
 
-    long value() {
-        return atol(print().c_str());
-    }
+    long value() { return atol(print().c_str()); }
 
     std::string print() {
         std::stringstream ss;
@@ -123,16 +121,23 @@ struct udp_string_msg {
     udp_header hdr;
     char payload[UDP_PAYLOAD_SIZE];
 
-    std::string print() {
-        return std::string(payload);
-    }
+    std::string print() { return std::string(payload); }
 };
 #pragma endregion UDP
 
 #pragma region TCP
 struct tcp_message {
     bint type;
-    char payload[UDP_MSG_SIZE]; // The biggest payloads are the udp messages
+    char payload[UDP_MSG_SIZE];  // The biggest payloads are the udp messages
+};
+
+struct tcp_subscribe {
+    char topic[50];
+    bool sf;
+};
+
+struct tcp_unsubscribe {
+    uint topic;  // By this point, the subscriber must know the topic id
 };
 #pragma endregion TCP
 

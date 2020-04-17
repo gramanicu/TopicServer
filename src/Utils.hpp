@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #include <memory.h>
 #include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -72,6 +73,9 @@
 #define UDP_PAYLOAD_SIZE 1500
 #define UDP_HDR_SIZE 51
 #define TCP_MSG_SIZE 1552
+#define TCP_DATA_SUBSCRIBE 51
+#define TCP_DATA_UNSUBSCRIBE 1
+#define TCP_DATA_TOPICID 51
 #define UDP_INT_SIZE 56
 #define UDP_REAL_SIZE 53
 #define UDP_FLOAT_SIZE 57

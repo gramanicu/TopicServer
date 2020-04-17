@@ -25,13 +25,23 @@ build: $(OBJ)
 	$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
 	-@rm -f $(OBJ)
 
+# Compiles the server program
+build_server: ./src/Server.o
+	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
+	-@rm -f $(OBJ)
+
+# Compiles the client program
+build_subscriber: ./src/Subscriber.o
+	$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
+	-@rm -f $(OBJ)
+
 # Runs the server
-run_server: clean build
+run_server: clean build_server
 	./server $(PORT)
 	-@rm -f server subscriber
 
 # Runs the server
-run_subscriber: clean build
+run_subscriber: clean build_subscriber
 	./subscriber $(USERNAME) $(IP) $(PORT)
 	-@rm -f server subscriber
 

@@ -47,9 +47,12 @@ class Server {
      */
     void init_connections() {
         MUST(bind(main_tcp_sock, (sockaddr *)&listen_addr, sizeof(sockaddr)) >=
-             0, "Could not bind tcp socket\n");
-        MUST(listen(main_tcp_sock, MAX_CLIENTS) >= 0, "Could not start listening for tcp connections\n");
-        MUST(bind(udp_sock, (sockaddr *)&listen_addr, sizeof(sockaddr)) >= 0, "Could not bind udp socket\n");
+                 0,
+             "Could not bind tcp socket\n");
+        MUST(listen(main_tcp_sock, MAX_CLIENTS) >= 0,
+             "Could not start listening for tcp connections\n");
+        MUST(bind(udp_sock, (sockaddr *)&listen_addr, sizeof(sockaddr)) >= 0,
+             "Could not bind udp socket\n");
 
         // Set the file descriptors for the sockets
         FD_SET(main_tcp_sock, &read_fds);
@@ -96,25 +99,25 @@ class Server {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
             std::cout << hdr.print() << " - ";
             switch (hdr.type) {
-                case INT: {
+                case udp_msg_type::INT: {
                     udp_int_msg msg;
                     bzero(&msg, UDP_INT_SIZE);
                     memcpy(&msg, buffer, UDP_INT_SIZE);
                     std::cout << msg.print() << "\n";
                 } break;
-                case SHORT_REAL: {
+                case udp_msg_type::SHORT_REAL: {
                     udp_real_msg msg;
                     bzero(&msg, UDP_REAL_SIZE);
                     memcpy(&msg, buffer, UDP_REAL_SIZE);
                     std::cout << msg.print() << "\n";
                 } break;
-                case FLOAT: {
+                case udp_msg_type::FLOAT: {
                     udp_float_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, UDP_FLOAT_SIZE);
                     std::cout << msg.print() << "\n";
                 } break;
-                case STRING: {
+                case udp_msg_type::STRING: {
                     udp_string_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, udp_msg_size);
@@ -124,20 +127,43 @@ class Server {
         }
     }
 
-    void read_tcp_message(const uint sockfd) {  
+    void read_tcp_message(uint sockfd) {
         tcp_message msg;
         bzero(&msg, TCP_MSG_SIZE);
 
         ssize_t msg_size = recv(sockfd, &msg, sizeof(msg), 0);
         CERR(msg_size < 0);
 
-        if(msg_size == 0) {
+        if (msg_size == 0) {
             // Client disconnected
+            close(sockfd);
         } else {
-            std::cout << (int)msg.type << " ";
-            std::cout << msg.payload << "\n";
-        }
+            switch (msg.type) {
+                case tcp_msg_type::CONNECT: {
+                    std::cout << msg.payload << "\n";
+                } break;
+                case tcp_msg_type::SUBSCRIBE: {
+                    tcp_subscribe data;
+                    bzero(&data, TCP_DATA_SUBSCRIBE);
+                    memcpy(&data, msg.payload, TCP_DATA_SUBSCRIBE);
 
+                    if (data.sf) {
+                        std::cout << "Subscribe " << data.topic << " FALSE\n";
+                    } else {
+                        std::cout << "Subscribe " << data.topic << " TRUE\n";
+                    }
+                } break;
+                case tcp_msg_type::UNSUBSCRIBE: {
+                    tcp_unsubscribe data;
+                    bzero(&data, TCP_DATA_UNSUBSCRIBE);
+                    memcpy(&data, msg.payload, TCP_DATA_UNSUBSCRIBE);
+
+                    std::cout << "Unsubscribe " << data.topic << "\n";
+                } break;
+                default:
+                    break;
+            }
+        }
     }
 
     void accept_connection() {
@@ -176,10 +202,11 @@ class Server {
         // Clear the file descriptors sets
         clear_fds();
 
-        // set master socket to allow multiple connections ,
-        // this is just a good habit, it will work without this
+        // Set the socket options
         const int opt = 1;
-        MUST(setsockopt(main_tcp_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)==0), "Couldn't set master socket options\n");
+        MUST(setsockopt(main_tcp_sock, SOL_SOCKET, TCP_NODELAY, &opt,
+                        sizeof(opt) == 0),
+             "Couldn't set master socket options\n");
 
         // Set the listen adress
         listen_addr.sin_family = AF_INET;
