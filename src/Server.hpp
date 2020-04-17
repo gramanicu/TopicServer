@@ -89,6 +89,7 @@ class Server {
 
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
+            std::cout << hdr.print() << " ";
             switch (hdr.type) {
                 case INT: {
                     udp_int_msg msg;
@@ -105,7 +106,7 @@ class Server {
                 case FLOAT: {
                     udp_float_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
-                    memcpy(&msg, buffer, UDP_FLOAT_SIZE); 
+                    memcpy(&msg, buffer, UDP_FLOAT_SIZE);
                     std::cout << msg.print() << "\n";
                 } break;
                 case STRING: {

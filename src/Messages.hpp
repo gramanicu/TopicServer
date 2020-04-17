@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include <iomanip>
 #include "Utils.hpp"
-#include <iomanip>  
 
 #define UDP_INT_SIZE 56
 #define UDP_REAL_SIZE 53
@@ -33,6 +33,28 @@ namespace application {
 struct udp_header {
     char topic[TOPIC_LENGTH];
     bint type;
+
+    std::string print() {
+        std::stringstream ss;
+        ss << topic << " ";
+        switch (type) {
+            case INT:
+                ss << "INT";
+                break;
+            case SHORT_REAL:
+                ss << "SHORT_REAL";
+                break;
+            case FLOAT:
+                ss << "FLOAT";
+                break;
+            case STRING:
+                ss << "STRING";
+                break;
+            default:
+                break;
+        }
+        return ss.str();
+    }
 };
 
 struct udp_int_msg {
@@ -56,7 +78,7 @@ struct udp_real_msg {
 
     std::string print() {
         std::stringstream ss;
-        float rez = (float) ((val));
+        float rez = (float)((val));
         rez /= 100;
         ss << std::fixed << std::setprecision(2) << rez;
         return ss.str();
@@ -72,9 +94,9 @@ struct udp_float_msg {
     std::string print() {
         std::stringstream ss;
         float rez, pow = power(10, exp);
-        rez = (float) (ntohl(val));
+        rez = (float)(ntohl(val));
         rez /= pow;
-        if(sign) {
+        if (sign) {
             ss << "-";
         }
         ss << rez;
