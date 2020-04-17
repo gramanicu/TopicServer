@@ -1,3 +1,5 @@
 test/tester
 src/*.o
 .vscode*
+server
+subscriber

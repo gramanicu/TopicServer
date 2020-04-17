@@ -62,6 +62,10 @@ struct udp_int_msg {
     bint sign;
     uint val;
 
+    long value() {
+        return atol(print().c_str());
+    }
+
     std::string print() {
         std::stringstream ss;
         if (sign) {
@@ -76,11 +80,15 @@ struct udp_real_msg {
     udp_header hdr;
     short val;
 
+    float value() {
+        float res = (float)((val));
+        res /= 100;
+        return res;
+    }
+
     std::string print() {
         std::stringstream ss;
-        float rez = (float)((val));
-        rez /= 100;
-        ss << std::fixed << std::setprecision(2) << rez;
+        ss << std::fixed << std::setprecision(2) << value();
         return ss.str();
     }
 };
@@ -91,15 +99,19 @@ struct udp_float_msg {
     uint val;
     bint exp;
 
+    float value() {
+        float res, pow = power(10, exp);
+        res = (float)(ntohl(val));
+        res /= pow;
+        if (sign) {
+            return -res;
+        }
+        return res;
+    }
+
     std::string print() {
         std::stringstream ss;
-        float rez, pow = power(10, exp);
-        rez = (float)(ntohl(val));
-        rez /= pow;
-        if (sign) {
-            ss << "-";
-        }
-        ss << rez;
+        ss << value();
         return ss.str();
     }
 };

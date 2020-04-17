@@ -23,6 +23,7 @@
 #pragma once
 #include <netinet/ip.h>
 #include <sys/select.h>
+#include <arpa/inet.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -76,8 +77,9 @@ class Server {
         }
     }
 
+    void process_udp_message() {}
+
     void read_udp_message() {
-        // Accept the "connection"
         udp_header hdr;
         sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
@@ -87,32 +89,31 @@ class Server {
         int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
                                     (sockaddr*)&client_addr, &client_len);
 
+        std::cout << inet_ntoa(client_addr.sin_addr) << ":";
+        std::cout << ntohs(client_addr.sin_port) << " ";
+
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
-            std::cout << hdr.print() << " ";
+            std::cout << hdr.print() << "\n";
             switch (hdr.type) {
                 case INT: {
                     udp_int_msg msg;
                     bzero(&msg, UDP_INT_SIZE);
                     memcpy(&msg, buffer, UDP_INT_SIZE);
-                    std::cout << msg.print() << "\n";
                 } break;
                 case SHORT_REAL: {
                     udp_real_msg msg;
                     bzero(&msg, UDP_REAL_SIZE);
                     memcpy(&msg, buffer, UDP_REAL_SIZE);
-                    std::cout << msg.print() << "\n";
                 } break;
                 case FLOAT: {
                     udp_float_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, UDP_FLOAT_SIZE);
-                    std::cout << msg.print() << "\n";
                 } break;
                 case STRING: {
                     udp_string_msg msg;
                     memcpy(&msg, buffer, udp_msg_size);
-                    std::cout << msg.payload << "\n";
                 }
             }
         }
