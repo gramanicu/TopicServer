@@ -23,6 +23,7 @@
 #pragma once
 
 #include <map>
+
 #include "Utils.hpp"
 
 enum user_status { U_OFFLINE, U_ONLINE };

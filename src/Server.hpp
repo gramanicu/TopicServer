@@ -21,15 +21,11 @@
  */
 
 #pragma once
-#include <netinet/ip.h>
-#include <sys/select.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include <string>
-#include <vector>
+
 #include "Database.hpp"
 #include "Messages.hpp"
 #include "User.hpp"
+#include "Utils.hpp"
 
 namespace application {
 class Server {
@@ -50,10 +46,10 @@ class Server {
      * @brief Prepare, bind and start listening
      */
     void init_connections() {
-        CERR(bind(main_tcp_sock, (sockaddr*)&listen_addr, sizeof(sockaddr)) <
-             0);
-        CERR(listen(main_tcp_sock, MAX_CLIENTS) < 0);
-        CERR(bind(udp_sock, (sockaddr*)&listen_addr, sizeof(sockaddr)) < 0);
+        MUST(bind(main_tcp_sock, (sockaddr *)&listen_addr, sizeof(sockaddr)) >=
+             0, "Could not bind tcp socket\n");
+        MUST(listen(main_tcp_sock, MAX_CLIENTS) >= 0, "Could not start listening for tcp connections\n");
+        MUST(bind(udp_sock, (sockaddr *)&listen_addr, sizeof(sockaddr)) >= 0, "Could not bind udp socket\n");
 
         // Set the file descriptors for the sockets
         FD_SET(main_tcp_sock, &read_fds);
@@ -66,15 +62,19 @@ class Server {
 
     /**
      * @brief Read and execute commands from STDIN
+     * Will return whether the program should close.
+     * @return true Close the program
+     * @return false Continue the program
      */
-    void read_input() {
+    bool read_input() {
         std::string command;
         std::cin >> command;
 
         if (command == "exit") {
             // TODO - Close all clients
-            exit(0);
+            return true;
         }
+        return false;
     }
 
     void process_udp_message() {}
@@ -87,41 +87,57 @@ class Server {
         bzero(buffer, UDP_MSG_SIZE);
 
         int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
-                                    (sockaddr*)&client_addr, &client_len);
+                                    (sockaddr *)&client_addr, &client_len);
 
         std::cout << inet_ntoa(client_addr.sin_addr) << ":";
-        std::cout << ntohs(client_addr.sin_port) << " ";
+        std::cout << ntohs(client_addr.sin_port) << " - ";
 
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
-            std::cout << hdr.print() << "\n";
+            std::cout << hdr.print() << " - ";
             switch (hdr.type) {
                 case INT: {
                     udp_int_msg msg;
                     bzero(&msg, UDP_INT_SIZE);
                     memcpy(&msg, buffer, UDP_INT_SIZE);
+                    std::cout << msg.print() << "\n";
                 } break;
                 case SHORT_REAL: {
                     udp_real_msg msg;
                     bzero(&msg, UDP_REAL_SIZE);
                     memcpy(&msg, buffer, UDP_REAL_SIZE);
+                    std::cout << msg.print() << "\n";
                 } break;
                 case FLOAT: {
                     udp_float_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, UDP_FLOAT_SIZE);
+                    std::cout << msg.print() << "\n";
                 } break;
                 case STRING: {
                     udp_string_msg msg;
+                    bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, udp_msg_size);
+                    std::cout << msg.print() << "\n";
                 }
             }
         }
     }
 
-    void read_tcp_message() {
-        // TODO - look into fork() - found here
-        // https://www.geeksforgeeks.org/tcp-and-udp-server-using-select/
+    void read_tcp_message(const uint sockfd) {  
+        tcp_message msg;
+        bzero(&msg, TCP_MSG_SIZE);
+
+        ssize_t msg_size = recv(sockfd, &msg, sizeof(msg), 0);
+        CERR(msg_size < 0);
+
+        if(msg_size == 0) {
+            // Client disconnected
+        } else {
+            std::cout << (int)msg.type << " ";
+            std::cout << msg.payload << "\n";
+        }
+
     }
 
     void accept_connection() {
@@ -129,7 +145,7 @@ class Server {
         sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int new_sockfd =
-            accept(main_tcp_sock, (sockaddr*)&client_addr, &client_len);
+            accept(main_tcp_sock, (sockaddr *)&client_addr, &client_len);
         CERR(new_sockfd < 0);
 
         // Add the new socket
@@ -160,6 +176,11 @@ class Server {
         // Clear the file descriptors sets
         clear_fds();
 
+        // set master socket to allow multiple connections ,
+        // this is just a good habit, it will work without this
+        const int opt = 1;
+        MUST(setsockopt(main_tcp_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)==0), "Couldn't set master socket options\n");
+
         // Set the listen adress
         listen_addr.sin_family = AF_INET;
         listen_addr.sin_port = htons(main_port);
@@ -183,13 +204,16 @@ class Server {
             for (uint i = 0; i <= max_fd; ++i) {
                 if (FD_ISSET(i, &tmp_fds)) {
                     if (i == STDIN_FILENO) {
-                        read_input();
+                        if (read_input()) {
+                            // Close the program
+                            return;
+                        }
                     } else if (i == main_tcp_sock) {
                         accept_connection();
                     } else if (i == udp_sock) {
                         read_udp_message();
                     } else if (i != STDOUT_FILENO && i != STDERR_FILENO) {
-                        read_tcp_message();
+                        read_tcp_message(i);
                     }
                 }
             }

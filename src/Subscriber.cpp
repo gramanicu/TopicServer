@@ -21,11 +21,26 @@
  */
 
 #include "Subscriber.hpp"
+
 #include <iostream>
+#include <sstream>
+
+std::string require_params() {
+    std::stringstream ss;
+    ss << "Wrong parameters : ./subscriber ID IP PORT\n";
+    return ss.str();
+}
 
 int main(int argc, char *argv[]) {
-    application::Subscriber sub;
-    sub.run();
+    // Check if the PORT parameter was specified
+    MUST(argc == 4, require_params());
+
+    // Checks if the port provided is an actual number
+    uint port = atoi(argv[3]);
+    MUST(port, require_params());
+
+    application::Subscriber subscriber(std::string(argv[1]), argv[2], port);
+    subscriber.run();
 
     return 0;
 }

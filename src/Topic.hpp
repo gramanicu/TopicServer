@@ -23,6 +23,7 @@
 #pragma once
 
 #include <vector>
+
 #include "Utils.hpp"
 
 #define MAX_TOPIC_LINES 10000

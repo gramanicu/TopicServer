@@ -22,16 +22,13 @@
 
 #pragma once
 
-#include <libgen.h>  // dirname, basename
-#include <memory.h>
+#include <libgen.h>    // dirname, basename
 #include <sys/stat.h>  // mkdir
-#include <sys/types.h>
-#include <unistd.h>  // unlink, rmdir
-#include <cstring>
+#include <unistd.h>    // unlink, rmdir
+
 #include <experimental/filesystem>  // remove_all
-#include <fstream>
-#include <iostream>
-#include <stack>
+
+#include "Utils.hpp"
 
 namespace application {
 
@@ -167,7 +164,7 @@ class Filesystem {
         if (_path.at(_path.size() - 1) != '/') {
             // If we may need to create directories, but definetely a file
             _createFolders(dirname(path));
-            std::ofstream file{_path.c_str()};
+            std::ofstream out{_path.c_str()};
         }
         free(path);
     }

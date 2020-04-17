@@ -22,6 +22,20 @@
 
 #pragma once
 
+#include <arpa/inet.h>
+#include <memory.h>
+#include <netinet/ip.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <stack>
+#include <string>
+#include <vector>
+
 #define lint uint64_t  // Long Int
 #define uint uint32_t  // Unsigned Int
 #define sint uint16_t  // Short Int
@@ -54,11 +68,29 @@
 
 // Message constants
 #define TOPIC_LENGTH 50
-#define PAYLOAD_MAX_SIZE 1500
 #define UDP_MSG_SIZE 1551
+#define UDP_PAYLOAD_SIZE 1500
 #define UDP_HDR_SIZE 51
+#define TCP_MSG_SIZE 1552
+#define UDP_INT_SIZE 56
+#define UDP_REAL_SIZE 53
+#define UDP_FLOAT_SIZE 57
 
-enum msg_type { INT, SHORT_REAL, FLOAT, STRING };
+/**
+ * @brief The different types of UDP messages, as defined in the problem
+ * statement
+ */
+enum udp_msg_type { INT, SHORT_REAL, FLOAT, STRING };
+
+/**
+ * @brief The different types of TCP messages
+ * DATA - server->client - contains topic data
+ * SUBSCRIBE - client->server - client subscription request
+ * UNSUBSCRIBE - client->server - client unsubscribe request
+ * TOPIC_ID - server->client - contains the id of a specific topic
+ * CONNECT - client->server - client connect request and his info (id, etc.)
+ */
+enum tcp_msg_type { DATA, SUBSCRIBE, UNSUBSCRIBE, TOPIC_ID, CONNECT };
 
 // Compute power y of x in O(Log y)
 double power(int x, uint y) {

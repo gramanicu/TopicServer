@@ -5,7 +5,7 @@
 
 # Compilation variables
 CC = g++
-CFLAGS = -lstdc++fs -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
+CFLAGS = -lstdc++fs -Wno-unknown-pragmas -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
 INCLUDE = src
 
 SRC = $(wildcard src/*.cpp)

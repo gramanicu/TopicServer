@@ -23,20 +23,23 @@
 #pragma once
 
 #include <iomanip>
+
 #include "Utils.hpp"
 
-#define UDP_INT_SIZE 56
-#define UDP_REAL_SIZE 53
-#define UDP_FLOAT_SIZE 57
+/**
+ * @brief This file contains definitions for different kinds of tcp/udp
+ * messages.
+ */
 
 namespace application {
+#pragma region UDP
 struct udp_header {
     char topic[TOPIC_LENGTH];
     bint type;
 
     std::string print() {
         std::stringstream ss;
-        ss << topic << " ";
+        ss << topic << " - ";
         switch (type) {
             case INT:
                 ss << "INT";
@@ -118,7 +121,19 @@ struct udp_float_msg {
 
 struct udp_string_msg {
     udp_header hdr;
-    char payload[PAYLOAD_MAX_SIZE];
+    char payload[UDP_PAYLOAD_SIZE];
+
+    std::string print() {
+        return std::string(payload);
+    }
 };
+#pragma endregion UDP
+
+#pragma region TCP
+struct tcp_message {
+    bint type;
+    char payload[UDP_MSG_SIZE]; // The biggest payloads are the udp messages
+};
+#pragma endregion TCP
 
 }  // namespace application
