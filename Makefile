@@ -83,6 +83,11 @@ gitignore:
 pack: clean
 	zip -FSr TopicServer.zip *
 
+# Starts an udp client that will send data on different topics
 udp_client:	
 	python3 ./checker/udp_client.py --source-port 1234 --input_file ./checker/sample_payloads.json --delay 10 --mode all_once $(IP) $(PORT)
+
+# Git repository statistics (line count)
+statistics:
+	@git ls-files -x src/* test/* | xargs wc -l | sort -rn
 
