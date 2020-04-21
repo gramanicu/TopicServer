@@ -76,7 +76,7 @@ class Server {
      * @param name The name of the topic
      * The id is automatically assigned
      */
-    void add_topic(const std::string& name) {
+    void add_topic(const std::string &name) {
         // If the topic doesn't exist already
         if (get_topic_id(name) == -1) {
             topics.insert(std::make_pair(max_topic_id, name));
@@ -280,7 +280,7 @@ class Server {
      * @param main_port The port
      */
     explicit Server(const uint main_port)
-        : main_port(main_port), max_topic_id(0), max_fd(0) {
+        : main_port(main_port), max_fd(0), max_topic_id(0) {
         // Initialise the main TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         CERR(sock < 0);

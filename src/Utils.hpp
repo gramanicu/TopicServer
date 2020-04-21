@@ -116,9 +116,10 @@ double power(int x, uint y) {
 
 /**
  * @brief This function is similar to strncpy
- * Because strcpy is vulnerable to buffer overflows and strncpy doesn't necessarily end
- * strings with null terminator, this is solved using this function. Works like strlcpy
+ * Because strcpy is vulnerable to buffer overflows and strncpy doesn't
+ * necessarily end strings with null terminator, this is solved using this
+ * function. Works like strlcpy
  */
-void safe_cpy(const char *dst, const char *src, size_t size) {
-    *((char *) mempcpy (dst, src, size)) = '\0';
+void safe_cpy(char *dst, const char *src, size_t size) {
+    *((char *)mempcpy(dst, src, size)) = '\0';
 }
