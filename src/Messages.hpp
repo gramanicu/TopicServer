@@ -33,6 +33,11 @@
 
 namespace application {
 #pragma region UDP
+
+/**
+ * @brief Contains the header of a udp message
+ * The topic and the type of the message
+ */
 struct udp_header {
     char topic[TOPIC_LENGTH];
     bint type;
@@ -60,6 +65,11 @@ struct udp_header {
     }
 };
 
+// Next few structs define different types of udp messages
+
+/**
+ * @brief A udp message that contains a INT
+ */
 struct udp_int_msg {
     udp_header hdr;
     bint sign;
@@ -77,6 +87,9 @@ struct udp_int_msg {
     }
 };
 
+/**
+ * @brief A udp message that contains a SHORT_REAL
+ */
 struct udp_real_msg {
     udp_header hdr;
     short val;
@@ -94,6 +107,9 @@ struct udp_real_msg {
     }
 };
 
+/**
+ * @brief A udp message that contains a FLOAT
+ */
 struct udp_float_msg {
     udp_header hdr;
     bint sign;
@@ -117,6 +133,9 @@ struct udp_float_msg {
     }
 };
 
+/**
+ * @brief A udp message that contains a STRING
+ */
 struct udp_string_msg {
     udp_header hdr;
     char payload[UDP_PAYLOAD_SIZE];
@@ -126,24 +145,51 @@ struct udp_string_msg {
 #pragma endregion UDP
 
 #pragma region TCP
+
+/**
+ * @brief Defines a standard tcp message
+ * Contains a type and the payload
+ */
 struct tcp_message {
     bint type;
     char payload[UDP_MSG_SIZE];  // The biggest payloads are the udp messages
 };
 
+// Next structs define different payload types
+
+/**
+ * @brief Data for a CONNECT
+ * Contains the name of the client that wants to connect
+ * client => server
+ */
 struct tcp_connect {
     char name[50];  // The id of the client
 };
 
+/**
+ * @brief Data for a SUBSCRIBE
+ * Contains the name of the topic and if the "store & forward" option should be
+ * activated client => server
+ */
 struct tcp_subscribe {
     char topic[50];
     bool sf;
 };
 
+/**
+ * @brief Data for a UNSUBSCRIBE
+ * Contains the id of the topic the client wants to unsubscibe from
+ * client => server
+ */
 struct tcp_unsubscribe {
     uint topic;  // By this point, the subscriber must know the topic id
 };
 
+/**
+ * @brief Data for a TOPIC_ID
+ * Contains the name of topic and its assigned id
+ * server => client
+ */
 struct tcp_topic_id {
     char topic[50];
     uint id;

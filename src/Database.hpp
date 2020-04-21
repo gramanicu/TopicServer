@@ -38,9 +38,8 @@ class Client {
      * He will be online by default, with no topics subscribed
      * @param _id The id
      */
-    Client(const std::string& _id) : id(_id), isOnline(true) {
-        topics = std::unordered_set<uint>();
-    }
+    explicit Client(const std::string& _id)
+        : id(_id), isOnline(true), topics(std::unordered_set<uint>()) {}
 
     /**
      * @brief Copy-constructor

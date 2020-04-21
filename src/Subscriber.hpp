@@ -95,8 +95,7 @@ class Subscriber {
         msg.type = tcp_msg_type::CONNECT;
         tcp_connect data;
 
-        strncpy(data.name, client_id.c_str(),
-                std::min((int)client_id.size(), 50));
+        safe_cpy(data.name, client_id.c_str(), client_id.size());
         memcpy(msg.payload, &data, TCP_DATA_CONNECT);
         // Send the client info
         CERR(send(sockfd, &msg, TCP_DATA_CONNECT + 1, 0) < 0);
@@ -166,7 +165,7 @@ class Subscriber {
 
             tcp_subscribe data;
             data.sf = sf;
-            strncpy(data.topic, topic.c_str(), std::min((int)topic.size(), 50));
+            safe_cpy(data.topic, topic.c_str(), topic.size());
 
             msg.type = tcp_msg_type::SUBSCRIBE;
             memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
