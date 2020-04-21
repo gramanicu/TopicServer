@@ -25,11 +25,85 @@
 #include "Filesystem.hpp"
 #include "Utils.hpp"
 
+namespace database {
+class Client {
+   private:
+    std::string id;
+    bool isOnline;
+    std::unordered_set<uint> topics;
+
+   public:
+    /**
+     * @brief A new client with a specific id
+     * He will be online by default, with no topics subscribed
+     * @param _id The id
+     */
+    Client(const std::string _id) : id(_id), isOnline(true) {
+        topics = std::unordered_set<uint>();
+    }
+
+    /**
+     * @brief Copy-constructor
+     */
+    Client(const Client& other)
+        : id(other.id), isOnline(other.isOnline), topics(other.topics) {}
+
+    /**
+     * @brief Set the client's status
+     * @param _isOnline If he is online or not
+     */
+    void set_status(const bool _isOnline) { isOnline = isOnline; }
+
+    /**
+     * @brief Return the status of the client
+     * @return true He is online
+     * @return false He is offline
+     */
+    bool get_status() const { return isOnline; }
+
+    /**
+     * @brief Get the id of the client
+     * @return std::string The id of the client
+     */
+    std::string get_id() const { return id; }
+
+    /**
+     * @brief Checks if the client is subscribed to a topic
+     * @param topic The id of the topic
+     * @return true The client is subscribed to the topic
+     * @return false The client is not subscribed to the topic
+     */
+    bool is_subscribed(const uint topic) {
+        auto it = topics.find(topic);
+        return it != topics.end();
+    }
+
+    /**
+     * @brief Subscribe a client to a topic
+     * @param topic The id of the topic
+     */
+    void subscribe(const uint topic) { topics.insert(topic); }
+
+    /**
+     * @brief Unsubscribe a client from a topic
+     * @param topic The id of the topic
+     */
+    void unsubscribe(const uint topic) { topics.erase(topic); }
+};
+}  // namespace database
+
 namespace application {
+using namespace database;
+
 /**
  * @brief This class manages the Database of the application
  * Users (CLIENT_ID's) and their data, topic data, and some other data used by
  * the application
  */
-class Database {};
+class Database {
+   private:
+    std::vector<Client> clientList;
+
+   public:
+};
 }  // namespace application

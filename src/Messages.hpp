@@ -131,6 +131,10 @@ struct tcp_message {
     char payload[UDP_MSG_SIZE];  // The biggest payloads are the udp messages
 };
 
+struct tcp_connect {
+    char name[50];  // The id of the client
+};
+
 struct tcp_subscribe {
     char topic[50];
     bool sf;
@@ -139,6 +143,12 @@ struct tcp_subscribe {
 struct tcp_unsubscribe {
     uint topic;  // By this point, the subscriber must know the topic id
 };
+
+struct tcp_topic_id {
+    char topic[50];
+    uint id;
+};
+
 #pragma endregion TCP
 
 }  // namespace application

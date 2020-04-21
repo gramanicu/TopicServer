@@ -32,14 +32,41 @@ class Subscriber {
     sockaddr_in server_addr;
     std::string client_id;
 
+    // The database that links topic names to their id's
+    std::unordered_map<uint, std::string> topics;
+
+    /**
+     * @brief Return the name of a topic
+     * Will return " " if the id was not sent by the server
+     * @param id The id of the topic
+     * @return std::string The name of the topic
+     */
+    std::string get_topic_name(uint id) {
+        auto it = topics.find(id);
+
+        if (it == topics.end()) {
+            return " ";
+        } else {
+            return it->second;
+        }
+    }
+
     /**
      * @brief Return the id of a topic
-     * Will return -1 if the id was not sent by the server and -2 if the topic
-     * was never subscribed to
-     * @param topic The topic we need the id for
-     * @return uint The id of the topic
+     * Will return -1 if the topic id was not sent by the server
+     * @param name The name of the topic
+     * @return int The id of the topic
      */
-    int get_topic_id(std::string topic) { return 10; }
+    int get_topic_id(std::string name) {
+        auto it =
+            std::find_if(topics.begin(), topics.end(),
+                         [&name](auto&& pair) { return pair.second == name; });
+
+        if (it == topics.end()) {
+            return -1;
+        }
+        return it->first;
+    }
 
     /**
      * @brief Clear the file descriptors
@@ -63,19 +90,54 @@ class Subscriber {
         FD_SET(STDIN_FILENO, &read_fds);
 
         // Send client info
-        char buffer[TCP_MSG_SIZE];
-        bzero(buffer, TCP_MSG_SIZE);
         tcp_message msg;
+        bzero(&msg, TCP_MSG_SIZE);
         msg.type = tcp_msg_type::CONNECT;
-        strcpy(msg.payload, client_id.c_str());
+        tcp_connect data;
 
-        memcpy(buffer, &msg, TCP_MSG_SIZE);
-
+        strncpy(data.name, client_id.c_str(), client_id.size());
+        memcpy(msg.payload, &data, TCP_DATA_CONNECT);
         // Send the client info
-        CERR(send(sockfd, buffer, strlen(buffer), 0) < 0);
+        CERR(send(sockfd, &msg, TCP_DATA_CONNECT + 1, 0) < 0);
     }
 
-    void read_tcp_message() {}
+    /**
+     * @brief Read TCP messages received from the srver
+     * Will return whether the program should close. (the server closed)
+     * @return true Close the program
+     * @return false Continue the program
+     */
+    bool read_tcp_message() {
+        tcp_message msg;
+        bzero(&msg, TCP_MSG_SIZE);
+
+        ssize_t msg_size = recv(sockfd, &msg, sizeof(msg), 0);
+        CERR(msg_size < 0);
+
+        if (msg_size == 0) {
+            // The server disconnected
+            close(sockfd);
+            return true;
+        } else {
+            switch (msg.type) {
+                case tcp_msg_type::TOPIC_ID: {
+                    // Store the id of the topic in the topics map
+                    tcp_topic_id data;
+                    bzero(&data, TCP_DATA_TOPICID);
+                    memcpy(&data, msg.payload, TCP_DATA_TOPICID);
+
+                    std::cout << "Received " << data.id << " " << data.topic
+                              << "\n";
+                    topics.insert(std::make_pair(data.id, data.topic));
+                } break;
+                case tcp_msg_type::DATA: {
+                } break;
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
 
     /**
      * @brief Read input from stdin
@@ -98,9 +160,6 @@ class Subscriber {
             std::cin >> topic >> sf;
 
             // Send the subscribe request
-            char buffer[TCP_MSG_SIZE];
-            bzero(buffer, TCP_MSG_SIZE);
-
             tcp_message msg;
             bzero(&msg, sizeof(msg));
 
@@ -110,32 +169,28 @@ class Subscriber {
 
             msg.type = tcp_msg_type::SUBSCRIBE;
             memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
-            memcpy(buffer, &msg, TCP_DATA_SUBSCRIBE + 1);
 
             // Send the client info
-            CERR(send(sockfd, buffer, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
+            CERR(send(sockfd, &msg, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
         } else if (command == "unsubscribe") {
             // Unsubscribe
             std::string topic;
             std::cin >> topic;
 
             // Send client info
-            char buffer[TCP_MSG_SIZE];
-            bzero(buffer, TCP_MSG_SIZE);
             tcp_message msg;
             msg.type = tcp_msg_type::UNSUBSCRIBE;
             tcp_unsubscribe data;
 
             int id = get_topic_id(topic.c_str());
-            if (id == -1) {
-                std::cerr << "The server didn't set the id for that topic\n";
-            } else if (id >= 0) {
+
+            // If the topic was actually subscribed to
+            if (id != -1) {
                 data.topic = id;
-                memcpy(msg.payload, &data, sizeof(data));
-                memcpy(buffer, &msg, TCP_MSG_SIZE);
+                memcpy(msg.payload, &data, TCP_DATA_UNSUBSCRIBE);
 
                 // Send the client info
-                CERR(send(sockfd, buffer, strlen(buffer), 0) < 0);
+                CERR(send(sockfd, &msg, TCP_DATA_UNSUBSCRIBE, 0) < 0);
             }
         }
         return false;
@@ -166,6 +221,7 @@ class Subscriber {
 
     ~Subscriber() {
         // Close connection
+        shutdown(sockfd, SHUT_RDWR);
         close(sockfd);
     }
 
@@ -181,10 +237,14 @@ class Subscriber {
                 if (FD_ISSET(i, &tmp_fds)) {
                     if (i == STDIN_FILENO) {
                         if (read_input()) {
+                            // Close the subscriber
                             return;
                         }
-                    } else if (i != sockfd) {
-                        read_tcp_message();
+                    } else if (i == sockfd) {
+                        if (read_tcp_message()) {
+                            // Close the subscriber
+                            return;
+                        }
                     }
                 }
             }

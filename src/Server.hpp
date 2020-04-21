@@ -34,6 +34,56 @@ class Server {
     fd_set read_fds, tmp_fds;
     sockaddr_in listen_addr;
 
+    // The database that links topic names to their id's
+    std::unordered_map<uint, std::string> topics;
+    uint max_topic_id;
+
+    /**
+     * @brief Return the name of a topic
+     * Will return " " if the id was not sent by the server
+     * @param id The id of the topic
+     * @return std::string The name of the topic
+     */
+    std::string get_topic_name(uint id) {
+        auto it = topics.find(id);
+
+        if (it == topics.end()) {
+            return " ";
+        } else {
+            return it->second;
+        }
+    }
+
+    /**
+     * @brief Return the id of a topic
+     * Will return -1 if the topic id was not sent by the server
+     * @param name The name of the topic
+     * @return int The id of the topic
+     */
+    int get_topic_id(std::string name) {
+        auto it =
+            std::find_if(topics.begin(), topics.end(),
+                         [&name](auto &&pair) { return pair.second == name; });
+
+        if (it == topics.end()) {
+            return -1;
+        }
+        return it->first;
+    }
+
+    /**
+     * @brief Add a new topic to the list
+     * @param name The name of the topic
+     * The id is automatically assigned
+     */
+    void add_topic(const std::string name) {
+        // If the topic doesn't exist already
+        if (get_topic_id(name) == -1) {
+            topics.insert(std::make_pair(max_topic_id, name));
+            max_topic_id++;
+        }
+    }
+
     /**
      * @brief Clear the file descriptors
      */
@@ -98,6 +148,7 @@ class Server {
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
             std::cout << hdr.print() << " - ";
+            add_topic(hdr.topic);
             switch (hdr.type) {
                 case udp_msg_type::INT: {
                     udp_int_msg msg;
@@ -140,7 +191,15 @@ class Server {
         } else {
             switch (msg.type) {
                 case tcp_msg_type::CONNECT: {
-                    std::cout << msg.payload << "\n";
+                    tcp_connect data;
+                    bzero(&data, TCP_DATA_CONNECT);
+                    memcpy(&data, msg.payload, TCP_DATA_CONNECT);
+                    std::cout << "New client " << data.name
+                              << " connected from "
+                              << "IP"
+                              << ":"
+                              << "PORT"
+                              << ".\n";
                 } break;
                 case tcp_msg_type::SUBSCRIBE: {
                     tcp_subscribe data;
@@ -152,6 +211,12 @@ class Server {
                     } else {
                         std::cout << "Subscribe " << data.topic << " TRUE\n";
                     }
+
+                    // Add the topic if it doesn't exist already
+                    add_topic(data.topic);
+
+                    // Send the id of the topic to the client
+                    send_topic_id(sockfd, data.topic);
                 } break;
                 case tcp_msg_type::UNSUBSCRIBE: {
                     tcp_unsubscribe data;
@@ -163,6 +228,32 @@ class Server {
                 default:
                     break;
             }
+        }
+    }
+
+    /**
+     * @brief Send the id of a topic to the client connected to the specified
+     * sockfd
+     * @param sockfd The socket file descriptor
+     * @param name The name of the topic
+     */
+    void send_topic_id(const uint sockfd, const std::string name) {
+        tcp_message msg;
+        bzero(&msg, TCP_MSG_SIZE);
+
+        int id = get_topic_id(name);
+        if (id != -1) {
+            tcp_topic_id data;
+            strncpy(data.topic, name.c_str(), name.size());
+            data.id = id;
+            std::cout << data.id << "\n";
+            std::cout << data.topic << "\n";
+
+            msg.type = tcp_msg_type::TOPIC_ID;
+            memcpy(msg.payload, &data, TCP_DATA_TOPICID);
+
+            // Send the client info
+            CERR(send(sockfd, &msg, TCP_DATA_TOPICID + 1, 0) < 0);
         }
     }
 
@@ -188,7 +279,7 @@ class Server {
      * on
      * @param main_port The port
      */
-    Server(const uint main_port) : main_port(main_port) {
+    Server(const uint main_port) : main_port(main_port), max_topic_id(0) {
         // Initialise the main TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         CERR(sock < 0);
@@ -216,8 +307,13 @@ class Server {
 
     ~Server() {
         // Close connections
+        shutdown(main_tcp_sock, SHUT_RDWR);
+        shutdown(udp_sock, SHUT_RDWR);
         close(main_tcp_sock);
         close(udp_sock);
+
+        // TODO - close all client sockets
+        close(max_fd);
     }
 
     /**

@@ -30,11 +30,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <stack>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #define lint uint64_t  // Long Int
@@ -76,6 +79,7 @@
 #define TCP_DATA_SUBSCRIBE 51
 #define TCP_DATA_UNSUBSCRIBE 1
 #define TCP_DATA_TOPICID 51
+#define TCP_DATA_CONNECT 50
 #define UDP_INT_SIZE 56
 #define UDP_REAL_SIZE 53
 #define UDP_FLOAT_SIZE 57
