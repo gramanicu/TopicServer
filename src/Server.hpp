@@ -142,39 +142,41 @@ class Server {
         int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
                                     (sockaddr *)&client_addr, &client_len);
 
-        std::cout << inet_ntoa(client_addr.sin_addr) << ":";
-        std::cout << ntohs(client_addr.sin_port) << " - ";
+        std::stringstream ss;
+        ss << inet_ntoa(client_addr.sin_addr) << ":";
+        ss << ntohs(client_addr.sin_port) << " - ";
 
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
-            std::cout << hdr.print() << " - ";
+            ss << hdr.print() << " - ";
             add_topic(hdr.topic);
             switch (hdr.type) {
                 case udp_msg_type::INT: {
                     udp_int_msg msg;
                     bzero(&msg, UDP_INT_SIZE);
                     memcpy(&msg, buffer, UDP_INT_SIZE);
-                    std::cout << msg.print() << "\n";
+                    ss << msg.print() << "\n";
                 } break;
                 case udp_msg_type::SHORT_REAL: {
                     udp_real_msg msg;
                     bzero(&msg, UDP_REAL_SIZE);
                     memcpy(&msg, buffer, UDP_REAL_SIZE);
-                    std::cout << msg.print() << "\n";
+                    ss << msg.print() << "\n";
                 } break;
                 case udp_msg_type::FLOAT: {
                     udp_float_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, UDP_FLOAT_SIZE);
-                    std::cout << msg.print() << "\n";
+                    ss << msg.print() << "\n";
                 } break;
                 case udp_msg_type::STRING: {
                     udp_string_msg msg;
                     bzero(&msg, UDP_FLOAT_SIZE);
                     memcpy(&msg, buffer, udp_msg_size);
-                    std::cout << msg.print() << "\n";
+                    ss << msg.print() << "\n";
                 }
             }
+            console_log(ss.str());
         }
     }
 
@@ -188,6 +190,7 @@ class Server {
         if (msg_size == 0) {
             // Client disconnected
             close(sockfd);
+            FD_CLR(sockfd, &read_fds);
         } else {
             switch (msg.type) {
                 case tcp_msg_type::CONNECT: {
@@ -206,7 +209,7 @@ class Server {
                     bzero(&data, TCP_DATA_SUBSCRIBE);
                     memcpy(&data, msg.payload, TCP_DATA_SUBSCRIBE);
 
-                    if (data.sf) {
+                    if (data.sf == 0) {
                         std::cout << "Subscribe " << data.topic << " FALSE\n";
                     } else {
                         std::cout << "Subscribe " << data.topic << " TRUE\n";
@@ -214,7 +217,6 @@ class Server {
 
                     // Add the topic if it doesn't exist already
                     add_topic(data.topic);
-
                     // Send the id of the topic to the client
                     send_topic_id(sockfd, data.topic);
                 } break;
@@ -244,10 +246,10 @@ class Server {
         int id = get_topic_id(name);
         if (id != -1) {
             tcp_topic_id data;
+            bzero(&data, TCP_DATA_TOPICID);
+
             safe_cpy(data.topic, name.c_str(), name.size());
             data.id = id;
-            std::cout << data.id << "\n";
-            std::cout << data.topic << "\n";
 
             msg.type = tcp_msg_type::TOPIC_ID;
             memcpy(msg.payload, &data, TCP_DATA_TOPICID);

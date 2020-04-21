@@ -66,6 +66,9 @@
                   << std::strerror(errno) << "\n";        \
     }
 
+// Server settings
+#define ENABLE_LOGS false
+
 // Server constants
 #define MAX_CLIENTS UINT32_MAX
 #define MAX_STDIN_COMMAND 100
@@ -76,9 +79,9 @@
 #define UDP_PAYLOAD_SIZE 1500
 #define UDP_HDR_SIZE 51
 #define TCP_MSG_SIZE 1552
-#define TCP_DATA_SUBSCRIBE 51
-#define TCP_DATA_UNSUBSCRIBE 1
-#define TCP_DATA_TOPICID 51
+#define TCP_DATA_SUBSCRIBE sizeof(tcp_subscribe)
+#define TCP_DATA_UNSUBSCRIBE sizeof(tcp_unsubscribe)
+#define TCP_DATA_TOPICID sizeof(tcp_topic_id)
 #define TCP_DATA_CONNECT 50
 #define UDP_INT_SIZE 56
 #define UDP_REAL_SIZE 53
@@ -122,4 +125,15 @@ double power(int x, uint y) {
  */
 void safe_cpy(char *dst, const char *src, size_t size) {
     *((char *)mempcpy(dst, src, size)) = '\0';
+}
+
+/**
+ * @brief Print messages to STDOUT
+ * Will only print if ENABLE_LOGS is true
+ * @param msg The message to be printed
+ */
+void console_log(const std::string &msg) {
+    if (ENABLE_LOGS) {
+        std::cout << msg << "\n";
+    }
 }

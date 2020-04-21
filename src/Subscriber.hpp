@@ -125,9 +125,6 @@ class Subscriber {
                     tcp_topic_id data;
                     bzero(&data, TCP_DATA_TOPICID);
                     memcpy(&data, msg.payload, TCP_DATA_TOPICID);
-
-                    std::cout << "Received " << data.id << " " << data.topic
-                              << "\n";
                     topics.insert(std::make_pair(data.id, data.topic));
                 } break;
                 case tcp_msg_type::DATA: {
@@ -188,7 +185,6 @@ class Subscriber {
             if (id != -1) {
                 data.topic = id;
                 memcpy(msg.payload, &data, TCP_DATA_UNSUBSCRIBE);
-
                 // Send the client info
                 CERR(send(sockfd, &msg, TCP_DATA_UNSUBSCRIBE, 0) < 0);
             }
