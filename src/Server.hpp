@@ -60,7 +60,7 @@ class Server {
      * @param name The name of the topic
      * @return int The id of the topic
      */
-    int get_topic_id(std::string name) {
+    int get_topic_id(const std::string &name) {
         auto it =
             std::find_if(topics.begin(), topics.end(),
                          [&name](auto &&pair) { return pair.second == name; });
@@ -237,14 +237,14 @@ class Server {
      * @param sockfd The socket file descriptor
      * @param name The name of the topic
      */
-    void send_topic_id(const uint sockfd, const std::string name) {
+    void send_topic_id(const uint sockfd, const std::string &name) {
         tcp_message msg;
         bzero(&msg, TCP_MSG_SIZE);
 
         int id = get_topic_id(name);
         if (id != -1) {
             tcp_topic_id data;
-            strncpy(data.topic, name.c_str(), name.size());
+            strncpy(data.topic, name.c_str(), std::min((int)name.size(), 50));
             data.id = id;
             std::cout << data.id << "\n";
             std::cout << data.topic << "\n";
@@ -279,7 +279,8 @@ class Server {
      * on
      * @param main_port The port
      */
-    Server(const uint main_port) : main_port(main_port), max_topic_id(0) {
+    explicit Server(const uint main_port)
+        : main_port(main_port), max_topic_id(0) {
         // Initialise the main TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         CERR(sock < 0);

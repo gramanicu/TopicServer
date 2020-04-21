@@ -38,7 +38,7 @@ class Client {
      * He will be online by default, with no topics subscribed
      * @param _id The id
      */
-    Client(const std::string _id) : id(_id), isOnline(true) {
+    Client(const std::string& _id) : id(_id), isOnline(true) {
         topics = std::unordered_set<uint>();
     }
 
@@ -52,7 +52,7 @@ class Client {
      * @brief Set the client's status
      * @param _isOnline If he is online or not
      */
-    void set_status(const bool _isOnline) { isOnline = isOnline; }
+    void set_status(const bool _isOnline) { isOnline = _isOnline; }
 
     /**
      * @brief Return the status of the client

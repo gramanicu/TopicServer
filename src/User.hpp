@@ -48,7 +48,7 @@ class User {
    public:
     // Constructors
     User() : id(""), socket(0), status(U_OFFLINE) {}
-    explicit User(const std::string id, const uint socket,
+    explicit User(const std::string& id, const uint socket,
                   const user_status status = U_OFFLINE)
         : id(id), socket(socket), status(status){};
 

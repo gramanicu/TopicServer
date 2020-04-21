@@ -57,7 +57,7 @@ class Subscriber {
      * @param name The name of the topic
      * @return int The id of the topic
      */
-    int get_topic_id(std::string name) {
+    int get_topic_id(const std::string& name) {
         auto it =
             std::find_if(topics.begin(), topics.end(),
                          [&name](auto&& pair) { return pair.second == name; });
@@ -95,7 +95,8 @@ class Subscriber {
         msg.type = tcp_msg_type::CONNECT;
         tcp_connect data;
 
-        strncpy(data.name, client_id.c_str(), client_id.size());
+        strncpy(data.name, client_id.c_str(),
+                std::min((int)client_id.size(), 50));
         memcpy(msg.payload, &data, TCP_DATA_CONNECT);
         // Send the client info
         CERR(send(sockfd, &msg, TCP_DATA_CONNECT + 1, 0) < 0);
@@ -165,7 +166,7 @@ class Subscriber {
 
             tcp_subscribe data;
             data.sf = sf;
-            strncpy(data.topic, topic.c_str(), topic.size());
+            strncpy(data.topic, topic.c_str(), std::min((int)topic.size(), 50));
 
             msg.type = tcp_msg_type::SUBSCRIBE;
             memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
@@ -182,7 +183,7 @@ class Subscriber {
             msg.type = tcp_msg_type::UNSUBSCRIBE;
             tcp_unsubscribe data;
 
-            int id = get_topic_id(topic.c_str());
+            int id = get_topic_id(topic);
 
             // If the topic was actually subscribed to
             if (id != -1) {
@@ -197,7 +198,7 @@ class Subscriber {
     }
 
    public:
-    Subscriber(const std::string id, const char* ip, const uint port)
+    Subscriber(const std::string& id, const char* ip, const uint port)
         : server_port(port), client_id(id) {
         // Initialise the TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
