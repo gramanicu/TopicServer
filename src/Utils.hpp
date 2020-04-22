@@ -38,6 +38,7 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -79,15 +80,15 @@
 #define TOPIC_LENGTH 50
 #define UDP_MSG_SIZE 1551
 #define UDP_PAYLOAD_SIZE 1500
-#define UDP_HDR_SIZE 51
 #define TCP_MSG_SIZE 1552
 #define TCP_DATA_SUBSCRIBE sizeof(tcp_subscribe)
 #define TCP_DATA_UNSUBSCRIBE sizeof(tcp_unsubscribe)
 #define TCP_DATA_TOPICID sizeof(tcp_topic_id)
 #define TCP_DATA_CONNECT 50
-#define UDP_INT_SIZE 56
-#define UDP_REAL_SIZE 53
-#define UDP_FLOAT_SIZE 57
+#define UDP_INT_SIZE sizeof(udp_int)
+#define UDP_REAL_SIZE sizeof(udp_real)
+#define UDP_FLOAT_SIZE sizeof(udp_float)
+#define UDP_STRING_SIZE sizeof(udp_string)
 
 /**
  * @brief The different types of UDP messages, as defined in the problem
@@ -135,7 +136,7 @@ void safe_cpy(char *dst, const char *src, size_t size) {
  * @param msg The message to be printed
  */
 void console_log(const std::string &msg) {
-    if (ENABLE_LOGS) {
-        std::cout << msg << "\n";
+    if (!ENABLE_LOGS) {
+        std::cout << msg;
     }
 }

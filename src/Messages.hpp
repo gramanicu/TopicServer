@@ -33,45 +33,11 @@
 
 namespace application {
 #pragma region UDP
-
-/**
- * @brief Contains the header of a udp message
- * The topic and the type of the message
- */
-struct udp_header {
-    char topic[TOPIC_LENGTH];
-    bint type;
-
-    std::string print() {
-        std::stringstream ss;
-        ss << topic << " - ";
-        switch (type) {
-            case INT:
-                ss << "INT";
-                break;
-            case SHORT_REAL:
-                ss << "SHORT_REAL";
-                break;
-            case FLOAT:
-                ss << "FLOAT";
-                break;
-            case STRING:
-                ss << "STRING";
-                break;
-            default:
-                break;
-        }
-        return ss.str();
-    }
-};
-
 // Next few structs define different types of udp messages
-
 /**
  * @brief A udp message that contains a INT
  */
-struct udp_int_msg {
-    udp_header hdr;
+struct udp_int {
     bint sign;
     uint val;
 
@@ -82,7 +48,7 @@ struct udp_int_msg {
         if (sign) {
             ss << "-";
         }
-        ss << ntohl(val);
+        ss << val;
         return ss.str();
     }
 };
@@ -90,12 +56,11 @@ struct udp_int_msg {
 /**
  * @brief A udp message that contains a SHORT_REAL
  */
-struct udp_real_msg {
-    udp_header hdr;
-    short val;
+struct udp_real {
+    sint val;
 
     float value() {
-        float res = (float)((val));
+        float res = (float)(val);
         res /= 100;
         return res;
     }
@@ -110,15 +75,14 @@ struct udp_real_msg {
 /**
  * @brief A udp message that contains a FLOAT
  */
-struct udp_float_msg {
-    udp_header hdr;
+struct udp_float {
     bint sign;
     uint val;
     bint exp;
 
     float value() {
         float res, pow = power(10, exp);
-        res = (float)(ntohl(val));
+        res = (float)(val);
         res /= pow;
         if (sign) {
             return -res;
@@ -128,7 +92,7 @@ struct udp_float_msg {
 
     std::string print() {
         std::stringstream ss;
-        ss << value();
+        ss << std::fixed << std::setprecision(exp) << value();
         return ss.str();
     }
 };
@@ -136,12 +100,67 @@ struct udp_float_msg {
 /**
  * @brief A udp message that contains a STRING
  */
-struct udp_string_msg {
-    udp_header hdr;
+struct udp_string {
     char payload[UDP_PAYLOAD_SIZE];
 
     std::string print() { return std::string(payload); }
 };
+
+/**
+ * @brief Contains the header of a udp message
+ * The topic and the type of the message
+ */
+struct udp_message {
+    char topic[TOPIC_LENGTH];
+    bint type;
+    char payload[UDP_PAYLOAD_SIZE];
+
+    std::string print() {
+        std::stringstream ss;
+        ss << topic << " - ";
+        switch (type) {
+            case INT: {
+                ss << "INT - ";
+
+                udp_int data;
+                data.sign = payload[0];
+                data.val = ntohl(*(uint*)(payload + 1));
+
+                ss << data.print();
+            } break;
+            case SHORT_REAL: {
+                ss << "SHORT_REAL - ";
+
+                udp_real data;
+                data.val = ntohs(*(sint*)(payload));
+                
+                ss << data.print();
+            } break;
+            case FLOAT: {
+                ss << "FLOAT - ";
+
+                udp_float data;
+                data.sign = payload[0];
+                data.val = ntohl(*(uint*)(payload + 1));
+                data.exp = payload[5];
+
+                ss << data.print();
+            } break;
+            case STRING: {
+                ss << "STRING - ";
+
+                udp_string data;
+                bzero(&data, UDP_STRING_SIZE);
+                memcpy(&data, payload, UDP_STRING_SIZE);
+                ss << data.print();
+            } break;
+            default:
+                break;
+        }
+        return ss.str();
+    }
+};
+
 #pragma endregion UDP
 
 #pragma region TCP

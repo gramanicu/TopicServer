@@ -99,50 +99,28 @@ class Server {
      * messages it receives
      */
     void read_udp_message() {
-        udp_header hdr;
+        udp_message msg;
+        char buffer[UDP_MSG_SIZE];
+        bzero(&msg, UDP_MSG_SIZE);
+        bzero(&buffer, UDP_MSG_SIZE);
+
         sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
-        char buffer[UDP_MSG_SIZE];
-        bzero(buffer, UDP_MSG_SIZE);
 
-        int udp_msg_size = recvfrom(udp_sock, buffer, UDP_MSG_SIZE, 0,
+        ssize_t msg_size = recvfrom(udp_sock, &buffer, sizeof(buffer), 0,
                                     (sockaddr *)&client_addr, &client_len);
+        CERR(msg_size < 0);
 
+        memcpy(&msg, buffer, msg_size);
+
+        // This will build the string to be shown in the console log
         std::stringstream ss;
         ss << inet_ntoa(client_addr.sin_addr) << ":";
         ss << ntohs(client_addr.sin_port) << " - ";
 
-        if (udp_msg_size > 0) {
-            memcpy(&hdr, buffer, UDP_HDR_SIZE);
-            ss << hdr.print() << " - ";
-            db.add_topic(hdr.topic);
-            switch (hdr.type) {
-                case udp_msg_type::INT: {
-                    udp_int_msg msg;
-                    bzero(&msg, UDP_INT_SIZE);
-                    memcpy(&msg, buffer, UDP_INT_SIZE);
-                    ss << msg.print() << "\n";
-                } break;
-                case udp_msg_type::SHORT_REAL: {
-                    udp_real_msg msg;
-                    bzero(&msg, UDP_REAL_SIZE);
-                    memcpy(&msg, buffer, UDP_REAL_SIZE);
-                    ss << msg.print() << "\n";
-                } break;
-                case udp_msg_type::FLOAT: {
-                    udp_float_msg msg;
-                    bzero(&msg, UDP_FLOAT_SIZE);
-                    memcpy(&msg, buffer, UDP_FLOAT_SIZE);
-                    ss << msg.print() << "\n";
-                } break;
-                case udp_msg_type::STRING: {
-                    udp_string_msg msg;
-                    bzero(&msg, UDP_FLOAT_SIZE);
-                    memcpy(&msg, buffer, udp_msg_size);
-                    ss << msg.print() << "\n";
-                }
-            }
-            db.topic_new_message(db.get_topic_id(hdr.topic), ss.str());
+        if (msg_size > 0) {
+            ss << msg.print() << "\n";
+            db.topic_new_message(db.get_topic_id(msg.topic), ss.str());
             console_log(ss.str());
         }
     }
@@ -306,7 +284,6 @@ class Server {
     ~Server() {
         // Close connections
         close_skt(main_tcp_sock);
-        // close_skt(udp_sock);
 
         // Close all client sockets
         for (User &usr : db.get_online_users()) {

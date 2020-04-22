@@ -214,8 +214,9 @@ class Database {
      * @param message The message
      */
     void topic_new_message(uint id, std::string message) {
+        // TODO - create topic if it doesn't exist
         auto it = topics.find(id);
-        if(it != topics.end()) {
+        if (it != topics.end()) {
             it->second.add_message(message);
         }
     }
@@ -224,7 +225,7 @@ class Database {
      * @brief Save all the topics messages from memory to the files
      */
     void save_topics() {
-        for(auto& i : topics) {
+        for (auto& i : topics) {
             i.second.save();
         }
     }

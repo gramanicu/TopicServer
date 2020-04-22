@@ -80,7 +80,7 @@ class Topic {
                           std::ios_base::app | std::ios_base::out);
         // Store a quarter of the messages
         while (!messages.empty()) {
-            out << messages.front();
+            out << messages.front() << "\n";
             messages.pop();
         }
         out.close();
