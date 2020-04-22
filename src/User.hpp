@@ -32,7 +32,9 @@ namespace application {
 class User {
    private:
     std::string id;
+    std::string ip;
     uint socket;
+    sint port;
     bint status;
 
     /**
@@ -47,24 +49,38 @@ class User {
 
    public:
     // Constructors
-    User() : id(""), socket(0), status(U_OFFLINE) {}
-    explicit User(const std::string& id, const uint socket,
-                  const user_status status = U_OFFLINE)
-        : id(id), socket(socket), status(status){};
+    User() : id(""), ip(""), socket(0), port(0), status(U_ONLINE) {}
+    explicit User(const std::string& id, const std::string& ip,
+                  const uint socket, const uint port,
+                  const user_status status = U_ONLINE)
+        : id(id), ip(ip), socket(socket), port(port), status(status){};
 
     // Copy-Constructor
     User(const User& other)
         : id(other.id),
+          ip(other.ip),
           socket(other.socket),
+          port(other.port),
           status(other.status),
           topics(other.topics) {}
 
     /**
      * @brief Set the status of the user
-     * This will save the
      * @param isOnline
      */
     void set_status(const user_status isOnline) { status = isOnline; }
+
+    /**
+     * @brief Set the id of the user
+     * @param _id The id
+     */
+    void set_id(const std::string& _id) { id = _id; }
+
+    /**
+     * @brief Set the port of the user
+     * @param _port The port
+     */
+    void set_port(const sint _port) { port = _port; }
 
     /**
      * @brief Subscribe the user to a topic
@@ -103,6 +119,18 @@ class User {
      * @return uint The socket fd
      */
     uint get_socket() const { return socket; }
+
+    /**
+     * @brief Get the port on which this user "talks" to the server
+     * @return uint The port
+     */
+    sint get_port() const { return port; }
+
+    /**
+     * @brief Get the ip of the client (in string form)
+     * @return std::string The ip
+     */
+    std::string get_ip() const { return ip; }
 
     /**
      * @brief Get the status of the user
@@ -166,5 +194,16 @@ class User {
      * @param topic The topic
      */
     void sent_message(const uint topic) { topics[topic].first++; }
+
+    /**
+     * @brief A function that is called when the user disconnected
+     */
+    void disconnect() {
+        status = U_OFFLINE;
+        ip.clear();
+        port = 0;
+    }
+
+    bool operator<(const User& other) const { return id.compare(other.id) < 0; }
 };
 }  // namespace application

@@ -16,48 +16,55 @@ TST = $(wildcard test/*.cpp)
 TOBJ = $(TST:.cpp=.o)
 
 IP = 127.0.0.1
-PORT = 8080
+PORT = 8081
 USERNAME = Rockyn
 
 # Compiles the programs
 build: $(OBJ)
-	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
-	$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
+	@echo "Compiling code..."
+	@$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
+	@$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
 	-@rm -f $(OBJ)
 
 # Compiles the server program
 build_server: ./src/Server.o
-	$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
+	@echo "Compiling code..."
+	@$(CC) -I$(INCLUDE) -o server ./src/Server.o $(CFLAGS) 
 	-@rm -f $(OBJ)
 
 # Compiles the client program
 build_subscriber: ./src/Subscriber.o
-	$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
+	@echo "Compiling code..."
+	@$(CC) -I$(INCLUDE) -o subscriber ./src/Subscriber.o $(CFLAGS)
 	-@rm -f $(OBJ)
 
 # Runs the server
 run_server: clean build_server
-	./server $(PORT)
+	@echo "Started server"
+	@./server $(PORT)
 	-@rm -f server subscriber
 
 # Runs the server
 run_subscriber: clean build_subscriber
-	./subscriber $(USERNAME) $(IP) $(PORT)
+	@echo "Started subscriber"
+	@./subscriber $(USERNAME) $(IP) $(PORT)
 	-@rm -f server subscriber
 
 # Test the project
 test: $(TOBJ)
+	@echo "Compiling code..."
 	@$(CC) -I$(INCLUDE) -o $(TEXE) $^ $(CFLAGS) ||:
 	-@rm -f $(TOBJ) ||:
-	$(TEXE) ||:
+	@$(TEXE) ||:
 	-@rm -f $(TEXE) ||:
 
 %.o: %.cpp
-	$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
+	@$(CC) -I$(INCLUDE) -o $@ -c $< $(CFLAGS) 
 
 # Deletes the binary and object files
 clean:
 	rm -f server subscriber $(OBJ) TopicServer.zip
+	rm -rfd  data/*
 	echo "Deleted the binary and object files"
 
 # Automatic coding style, in my personal style
@@ -68,7 +75,7 @@ beauty:
 # Checks the memory for leaks
 MFLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes
 memory:clean build
-	valgrind $(MFLAGS) ./$(EXE)
+	valgrind $(MFLAGS) ./server $(PORT)
 
 # Adds and updates gitignore rules
 gitignore:
@@ -77,6 +84,7 @@ gitignore:
 	@echo ".vscode*" >> .gitignore ||:
 	@echo "server" >> .gitignore ||:
 	@echo "subscriber" >> .gitignore ||:	
+	@echo "/data" >> .gitignore ||:	
 	echo "Updated .gitignore"
 	
 # Creates an archive of the project

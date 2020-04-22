@@ -33,56 +33,10 @@ class Server {
     uint main_port, main_tcp_sock, udp_sock, max_fd;
     fd_set read_fds, tmp_fds;
     sockaddr_in listen_addr;
+    Database db;
 
     // The database that links topic names to their id's
     std::unordered_map<uint, std::string> topics;
-    uint max_topic_id;
-
-    /**
-     * @brief Return the name of a topic
-     * Will return " " if the id was not sent by the server
-     * @param id The id of the topic
-     * @return std::string The name of the topic
-     */
-    std::string get_topic_name(uint id) {
-        auto it = topics.find(id);
-
-        if (it == topics.end()) {
-            return " ";
-        } else {
-            return it->second;
-        }
-    }
-
-    /**
-     * @brief Return the id of a topic
-     * Will return -1 if the topic id was not sent by the server
-     * @param name The name of the topic
-     * @return int The id of the topic
-     */
-    int get_topic_id(const std::string &name) {
-        auto it =
-            std::find_if(topics.begin(), topics.end(),
-                         [&name](auto &&pair) { return pair.second == name; });
-
-        if (it == topics.end()) {
-            return -1;
-        }
-        return it->first;
-    }
-
-    /**
-     * @brief Add a new topic to the list
-     * @param name The name of the topic
-     * The id is automatically assigned
-     */
-    void add_topic(const std::string &name) {
-        // If the topic doesn't exist already
-        if (get_topic_id(name) == -1) {
-            topics.insert(std::make_pair(max_topic_id, name));
-            max_topic_id++;
-        }
-    }
 
     /**
      * @brief Clear the file descriptors
@@ -90,6 +44,15 @@ class Server {
     void clear_fds() {
         FD_ZERO(&read_fds);
         FD_ZERO(&tmp_fds);
+    }
+
+    /**
+     * @brief Close a socket
+     * @param sockfd The socket to be closed
+     */
+    void close_skt(int sockfd) {
+        CERR(shutdown(sockfd, SHUT_RDWR) != 0);
+        CERR(close(sockfd) != 0);
     }
 
     /**
@@ -124,7 +87,6 @@ class Server {
         std::cin >> command;
 
         if (command == "exit") {
-            // TODO - Close all clients
             return true;
         }
         return false;
@@ -132,6 +94,10 @@ class Server {
 
     void process_udp_message() {}
 
+    /**
+     * @brief This function parses and does different things based on UDP
+     * messages it receives
+     */
     void read_udp_message() {
         udp_header hdr;
         sockaddr_in client_addr;
@@ -149,7 +115,7 @@ class Server {
         if (udp_msg_size > 0) {
             memcpy(&hdr, buffer, UDP_HDR_SIZE);
             ss << hdr.print() << " - ";
-            add_topic(hdr.topic);
+            db.add_topic(hdr.topic);
             switch (hdr.type) {
                 case udp_msg_type::INT: {
                     udp_int_msg msg;
@@ -176,10 +142,16 @@ class Server {
                     ss << msg.print() << "\n";
                 }
             }
+            db.topic_new_message(db.get_topic_id(hdr.topic), ss.str());
             console_log(ss.str());
         }
     }
 
+    /**
+     * @brief This function parses and does different things based on TCP
+     * messages it receives
+     * @param sockfd The socket on which the message will be received
+     */
     void read_tcp_message(uint sockfd) {
         tcp_message msg;
         bzero(&msg, TCP_MSG_SIZE);
@@ -189,20 +161,39 @@ class Server {
 
         if (msg_size == 0) {
             // Client disconnected
-            close(sockfd);
+            close_skt(sockfd);
             FD_CLR(sockfd, &read_fds);
+            db.user_disconnect(sockfd);
         } else {
             switch (msg.type) {
                 case tcp_msg_type::CONNECT: {
                     tcp_connect data;
                     bzero(&data, TCP_DATA_CONNECT);
                     memcpy(&data, msg.payload, TCP_DATA_CONNECT);
-                    std::cout << "New client " << data.name
-                              << " connected from "
-                              << "IP"
-                              << ":"
-                              << "PORT"
-                              << ".\n";
+
+                    sockaddr_in client_addr = db.get_reserved_adress(sockfd);
+                    User user = User(
+                        data.name, std::string(inet_ntoa(client_addr.sin_addr)),
+                        sockfd, ntohs(client_addr.sin_port));
+
+                    if (!db.user_exists(data.name)) {
+                        // New user - add him to the database
+                        db.add_user(user);
+
+                        std::cout << "New client " << user.get_id()
+                                  << " connected from " << user.get_ip() << ":"
+                                  << user.get_port() << ".\n";
+                    } else {
+                        // Reconnected - just update the adress and port
+                        std::cout << "Reconnected client " << user.get_id()
+                                  << " from " << user.get_ip() << ":"
+                                  << user.get_port() << ".\n";
+                        if (db.user_exists(user.get_id())) {
+                            db.get_user(user.get_id()) = user;
+                        }
+
+                        // TODO - sent queued messages
+                    }
                 } break;
                 case tcp_msg_type::SUBSCRIBE: {
                     tcp_subscribe data;
@@ -216,7 +207,7 @@ class Server {
                     }
 
                     // Add the topic if it doesn't exist already
-                    add_topic(data.topic);
+                    db.add_topic(data.topic);
                     // Send the id of the topic to the client
                     send_topic_id(sockfd, data.topic);
                 } break;
@@ -243,7 +234,7 @@ class Server {
         tcp_message msg;
         bzero(&msg, TCP_MSG_SIZE);
 
-        int id = get_topic_id(name);
+        int id = db.get_topic_id(name);
         if (id != -1) {
             tcp_topic_id data;
             bzero(&data, TCP_DATA_TOPICID);
@@ -259,6 +250,9 @@ class Server {
         }
     }
 
+    /**
+     * @brief This function manages new TCP connections
+     */
     void accept_connection() {
         // Accept the new connection
         sockaddr_in client_addr;
@@ -271,7 +265,8 @@ class Server {
         FD_SET(new_sockfd, &read_fds);
         max_fd = std::max(max_fd, (uint)new_sockfd);
 
-        // TODO - If new client, save, else, make online
+        // Reserve the user data
+        db.reserve_adress(new_sockfd, client_addr);
     }
 
    public:
@@ -282,7 +277,7 @@ class Server {
      * @param main_port The port
      */
     explicit Server(const uint main_port)
-        : main_port(main_port), max_fd(0), max_topic_id(0) {
+        : main_port(main_port), max_fd(0), db(Database()) {
         // Initialise the main TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         CERR(sock < 0);
@@ -310,13 +305,16 @@ class Server {
 
     ~Server() {
         // Close connections
-        shutdown(main_tcp_sock, SHUT_RDWR);
-        shutdown(udp_sock, SHUT_RDWR);
-        close(main_tcp_sock);
-        close(udp_sock);
+        close_skt(main_tcp_sock);
+        // close_skt(udp_sock);
 
-        // TODO - close all client sockets
-        close(max_fd);
+        // Close all client sockets
+        for (User &usr : db.get_online_users()) {
+            std::cout << usr.get_socket() << "\n";
+            close_skt(usr.get_socket());
+        }
+
+        db.save_topics();
     }
 
     /**

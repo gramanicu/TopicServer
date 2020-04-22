@@ -30,16 +30,18 @@ class UserTest : public Test {
     bool run_tests() {
         return test_offline() && test_online() && test_id() &&
                test_subscribe() && test_store() && test_messages() &&
-               test_unsubscribe() && test_id();
+               test_unsubscribe() && test_id() && test_ip() && test_port() &&
+               test_id_change();
     }
 
    private:
     application::User user;
     uint topic = 12123127;
     uint lastmessage = 128;
+    uint port = 123;
 
     bool test_offline() {
-        user = application::User("abcd", 10, U_OFFLINE);
+        user = application::User("abcd", "127.0.0.1", 10, port, U_OFFLINE);
         return ASSERT_FALSE(user.is_online(), "The user should be offline\n");
     }
 
@@ -84,6 +86,22 @@ class UserTest : public Test {
     bool test_id() {
         return ASSERT_EQUALS(user.get_id(), "abcd",
                              "The user id is not correct\n");
+    }
+
+    bool test_id_change() {
+        user.set_id("123qwe");
+        return ASSERT_EQUALS(user.get_id(), "123qwe",
+                             "The user id was not changed correctly\n");
+    }
+
+    bool test_ip() {
+        return ASSERT_EQUALS(user.get_ip(), "127.0.0.1",
+                             "The user ip is not correct\n");
+    }
+
+    bool test_port() {
+        return ASSERT_EQUALS(user.get_port(), port,
+                             "The user port is not corect\n");
     }
 };
 }  // namespace testing
