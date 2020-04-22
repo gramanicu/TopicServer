@@ -92,8 +92,6 @@ class Server {
         return false;
     }
 
-    void process_udp_message() {}
-
     /**
      * @brief This function parses and does different things based on UDP
      * messages it receives
@@ -122,6 +120,8 @@ class Server {
             ss << msg.print() << "\n";
             db.topic_new_message(db.get_topic_id(msg.topic), ss.str());
             console_log(ss.str());
+
+            // TODO - send the message forward to the clients that require it
         }
     }
 
@@ -178,11 +178,7 @@ class Server {
                     bzero(&data, TCP_DATA_SUBSCRIBE);
                     memcpy(&data, msg.payload, TCP_DATA_SUBSCRIBE);
 
-                    if (data.sf == 0) {
-                        std::cout << "Subscribe " << data.topic << " FALSE\n";
-                    } else {
-                        std::cout << "Subscribe " << data.topic << " TRUE\n";
-                    }
+                    std::cout << "Subscribed " << data.topic << "  " <<  data.sf << "\n";
 
                     // Add the topic if it doesn't exist already
                     db.add_topic(data.topic);
@@ -194,7 +190,9 @@ class Server {
                     bzero(&data, TCP_DATA_UNSUBSCRIBE);
                     memcpy(&data, msg.payload, TCP_DATA_UNSUBSCRIBE);
 
-                    std::cout << "Unsubscribe " << data.topic << "\n";
+                    std::cout << "Unsubscribed " << data.topic << "\n";
+
+                    // TODO - send ACK to client
                 } break;
                 default:
                     break;

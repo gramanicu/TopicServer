@@ -126,7 +126,13 @@ class Subscriber {
                     bzero(&data, TCP_DATA_TOPICID);
                     memcpy(&data, msg.payload, TCP_DATA_TOPICID);
                     topics.insert(std::make_pair(data.id, data.topic));
+
+                    // TODO - print message (subscription ack)
                 } break;
+                case tcp_msg_type::SRV_MSG: {
+                    // TODO - print message from server (or make this 
+                    // specific to unsubscribe ack)
+                }
                 case tcp_msg_type::DATA: {
                 } break;
                 default:
@@ -193,6 +199,12 @@ class Subscriber {
     }
 
    public:
+    /**
+     * @brief Contrustor, initialises connections, etc.
+     * @param id The id/name of the subscriber
+     * @param ip The ip of the server
+     * @param port The port of the server
+     */
     Subscriber(const std::string& id, const char* ip, const uint port)
         : server_port(port), client_id(id) {
         // Initialise the TCP socket
@@ -215,12 +227,19 @@ class Subscriber {
         MUST(inet_aton(ip, &server_addr.sin_addr) != 0, "Invalid IP adress\n");
     }
 
+    /**
+     * @brief Desctructor, to cleanup memory, etc.
+     */
     ~Subscriber() {
         // Close connection
         shutdown(sockfd, SHUT_RDWR);
         close(sockfd);
     }
 
+    /**
+     * @brief Starts the subscriber program
+     * Will connect to the server and start sending/receiving messages, etc.
+     */
     void run() {
         init_connection();
 

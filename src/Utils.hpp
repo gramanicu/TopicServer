@@ -103,8 +103,9 @@ enum udp_msg_type { INT, SHORT_REAL, FLOAT, STRING };
  * UNSUBSCRIBE - client->server - client unsubscribe request
  * TOPIC_ID - server->client - contains the id of a specific topic
  * CONNECT - client->server - client connect request and his info (id, etc.)
+ * SRV_MSG - server->client - servers sends a message to the client
  */
-enum tcp_msg_type { DATA, SUBSCRIBE, UNSUBSCRIBE, TOPIC_ID, CONNECT };
+enum tcp_msg_type { DATA, SUBSCRIBE, UNSUBSCRIBE, TOPIC_ID, CONNECT, SRV_MSG };
 
 // Compute power y of x in O(Log y)
 double power(int x, uint y) {
