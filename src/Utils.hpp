@@ -83,6 +83,7 @@
 #define TCP_MSG_SIZE 1552
 #define TCP_DATA_SUBSCRIBE sizeof(tcp_subscribe)
 #define TCP_DATA_UNSUBSCRIBE sizeof(tcp_unsubscribe)
+#define TCP_DATA_CONFIRM_U sizeof(tcp_confirm_u)
 #define TCP_DATA_TOPICID sizeof(tcp_topic_id)
 #define TCP_DATA_CONNECT 50
 #define UDP_INT_SIZE sizeof(udp_int)
@@ -103,9 +104,17 @@ enum udp_msg_type { INT, SHORT_REAL, FLOAT, STRING };
  * UNSUBSCRIBE - client->server - client unsubscribe request
  * TOPIC_ID - server->client - contains the id of a specific topic
  * CONNECT - client->server - client connect request and his info (id, etc.)
- * SRV_MSG - server->client - servers sends a message to the client
+ * CONFIRM_U - server->client - servers confirms that the client was
+ * unsubscribed
  */
-enum tcp_msg_type { DATA, SUBSCRIBE, UNSUBSCRIBE, TOPIC_ID, CONNECT, SRV_MSG };
+enum tcp_msg_type {
+    DATA,
+    SUBSCRIBE,
+    UNSUBSCRIBE,
+    TOPIC_ID,
+    CONNECT,
+    CONFIRM_U
+};
 
 // Compute power y of x in O(Log y)
 double power(int x, uint y) {

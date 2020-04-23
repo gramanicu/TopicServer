@@ -34,6 +34,7 @@ class Subscriber {
 
     // The database that links topic names to their id's
     std::unordered_map<uint, std::string> topics;
+    std::set<std::string> queuedTopics;
 
     /**
      * @brief Return the name of a topic
@@ -127,11 +128,25 @@ class Subscriber {
                     memcpy(&data, msg.payload, TCP_DATA_TOPICID);
                     topics.insert(std::make_pair(data.id, data.topic));
 
-                    // TODO - print message (subscription ack)
+                    // If it was requested by this process, and not sent
+                    // because the user was previously subscribed to it
+                    auto it = queuedTopics.find(data.topic);
+                    if(it != queuedTopics.end()) {
+                        queuedTopics.erase(it);
+
+                        std::cout << "Subscribed " << data.topic << "\n";
+                        std::cout << data.id << "\n";
+                    }
                 } break;
-                case tcp_msg_type::SRV_MSG: {
-                    // TODO - print message from server (or make this 
-                    // specific to unsubscribe ack)
+                case tcp_msg_type::CONFIRM_U: {
+                    // The server confirmed we are unsubscribed from this topic
+                    tcp_confirm_u data;
+                    bzero(&data, TCP_DATA_CONFIRM_U);
+                    memcpy(&data, msg.payload, TCP_DATA_CONFIRM_U);
+
+                    std::cout << "Unsubscribed " << topics[data.topic] << "\n";
+                    std::cout << data.topic << "\n";
+                    topics.erase(data.topic);
                 }
                 case tcp_msg_type::DATA: {
                 } break;
@@ -175,6 +190,9 @@ class Subscriber {
 
             // Send the client info
             CERR(send(sockfd, &msg, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
+
+            // Mark this topic as "requested by the client, waiting id"
+            queuedTopics.insert(data.topic);
         } else if (command == "unsubscribe") {
             // Unsubscribe
             std::string topic;

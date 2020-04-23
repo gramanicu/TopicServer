@@ -169,6 +169,7 @@ class Server {
                         if (db.user_exists(user.get_id())) {
                             db.get_user(user.get_id()) = user;
                         }
+                        // TODO - send subscribed topics
 
                         // TODO - sent queued messages
                     }
@@ -178,10 +179,15 @@ class Server {
                     bzero(&data, TCP_DATA_SUBSCRIBE);
                     memcpy(&data, msg.payload, TCP_DATA_SUBSCRIBE);
 
-                    std::cout << "Subscribed " << data.topic << "  " <<  data.sf << "\n";
-
                     // Add the topic if it doesn't exist already
                     db.add_topic(data.topic);
+
+                    // Subscribe the client
+                    int id = db.get_topic_id(data.topic);
+                    if (id != -1) {
+                        db.get_user(sockfd).subscribe(id, data.sf);
+                    }
+
                     // Send the id of the topic to the client
                     send_topic_id(sockfd, data.topic);
                 } break;
@@ -190,9 +196,11 @@ class Server {
                     bzero(&data, TCP_DATA_UNSUBSCRIBE);
                     memcpy(&data, msg.payload, TCP_DATA_UNSUBSCRIBE);
 
-                    std::cout << "Unsubscribed " << data.topic << "\n";
+                    // Unsubscribe the client
+                    db.get_user(sockfd).unsubcribe(data.topic);
 
-                    // TODO - send ACK to client
+                    // Send unsubscribe confirmation
+                    send_unsubscribe_confirm(sockfd, data.topic);
                 } break;
                 default:
                     break;
@@ -224,6 +232,21 @@ class Server {
             // Send the client info
             CERR(send(sockfd, &msg, TCP_DATA_TOPICID + 1, 0) < 0);
         }
+    }
+
+    void send_unsubscribe_confirm(const uint sockfd, const uint id) {
+        tcp_message msg;
+        tcp_confirm_u data;
+        bzero(&msg, TCP_MSG_SIZE);
+        bzero(&data, TCP_DATA_CONFIRM_U);
+
+        data.topic = id;
+
+        msg.type = tcp_msg_type::CONFIRM_U;
+        memcpy(msg.payload, &data, TCP_DATA_CONFIRM_U);
+
+        // Send the unsubscribe confirmation
+        CERR(send(sockfd, &msg, TCP_DATA_CONFIRM_U + 1, 0) < 0);
     }
 
     /**

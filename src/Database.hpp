@@ -76,6 +76,21 @@ class Database {
     }
 
     /**
+     * @brief Returns the user with the specified socket (!check if user_exists
+     * before!)
+     * @param sockfd The socket
+     * @return User& The user
+     */
+    User& get_user(const uint sockfd) {
+        auto it = std::find_if(userList.begin(), userList.end(),
+                               [&sockfd](auto&& pair) {
+                                   return pair.second.get_socket() == sockfd;
+                               });
+
+        return it->second;
+    }
+
+    /**
      * @brief Get a vector with all users
      * @return std::vector<User&> All users
      */
@@ -126,6 +141,24 @@ class Database {
     bool user_exists(const std::string& id) const {
         auto i = userList.find(id);
         if (i != userList.end()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @brief Check if a user with the specified socket exists
+     * @param sockfd The socket of the user
+     * @return true The user exists
+     * @return false The user doesn't exist
+     */
+    bool user_exists(const uint sockfd) const {
+        auto it = std::find_if(userList.begin(), userList.end(),
+                               [&sockfd](auto&& pair) {
+                                   return pair.second.get_socket() == sockfd;
+                               });
+        if (it != userList.end()) {
             return true;
         } else {
             return false;

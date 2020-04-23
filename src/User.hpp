@@ -90,7 +90,8 @@ class User {
      * @param last_msg The id of the last message sent to the user, on this
      * topic
      */
-    void subscribe(const uint topic, const bool store, const uint last_msg) {
+    void subscribe(const uint topic, const bool store,
+                   const uint last_msg = 0) {
         std::pair<uint, bint> p;
         p = std::make_pair(last_msg, store);
 

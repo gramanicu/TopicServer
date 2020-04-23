@@ -133,7 +133,7 @@ struct udp_message {
 
                 udp_real data;
                 data.val = ntohs(*(sint*)(payload));
-                
+
                 ss << data.print();
             } break;
             case FLOAT: {
@@ -212,6 +212,15 @@ struct tcp_unsubscribe {
 struct tcp_topic_id {
     char topic[50];
     uint id;
+};
+
+/**
+ * @brief Data for a CONFIRM_U
+ * Contains the id of the topic the client was unsubscribed from
+ * server => client
+ */
+struct tcp_confirm_u {
+    uint topic;
 };
 
 #pragma endregion TCP
