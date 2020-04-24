@@ -101,9 +101,11 @@ struct udp_float {
  * @brief A udp message that contains a STRING
  */
 struct udp_string {
-    char payload[UDP_PAYLOAD_SIZE];
+    char payload[UDP_PAYLOAD_SIZE + 1];
 
-    std::string print() { return std::string(payload); }
+    std::string print() {
+        return std::string(payload); 
+    }
 };
 
 /**
@@ -151,7 +153,7 @@ struct udp_message {
 
                 udp_string data;
                 bzero(&data, UDP_STRING_SIZE);
-                memcpy(&data, payload, UDP_STRING_SIZE);
+                memcpy(&data, payload, UDP_PAYLOAD_SIZE);
                 ss << data.print();
             } break;
             default:
