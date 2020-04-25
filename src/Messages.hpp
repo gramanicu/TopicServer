@@ -103,9 +103,7 @@ struct udp_float {
 struct udp_string {
     char payload[UDP_PAYLOAD_SIZE + 1];
 
-    std::string print() {
-        return std::string(payload); 
-    }
+    std::string print() { return std::string(payload); }
 };
 
 /**
@@ -173,10 +171,14 @@ struct udp_message {
  */
 struct tcp_message {
     bint type;
-    char payload[UDP_MSG_SIZE];  // The biggest payloads are the udp messages
+    char payload[TCP_DATA_DATA];  // The biggest payloads are the udp messages
 };
 
 // Next structs define different payload types
+
+struct tcp_data {
+    char payload[TCP_DATA_DATA];  //
+};
 
 /**
  * @brief Data for a CONNECT

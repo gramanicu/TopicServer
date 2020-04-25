@@ -134,6 +134,18 @@ class User {
     std::string get_ip() const { return ip; }
 
     /**
+     * @brief Set the ip of the user
+     * @param _ip The new ip
+     */
+    void set_ip(const std::string& _ip) { ip = _ip; }
+
+    /**
+     * @brief Set the socket of the user
+     * @param sock The new socket
+     */
+    void set_socket(const uint sock) { socket = sock; }
+
+    /**
      * @brief Get the status of the user
      * @return user_status If he is online or offline
      */
@@ -154,6 +166,21 @@ class User {
     bool is_subscribed(const uint topic) {
         auto it = topics.find(topic);
         return it != topics.end();
+    }
+
+    /**
+     * @brief Checks if a user will receive messages that were sent while he was
+     * offline, on a specific topic
+     * @param topic The topic
+     * @return true Store-forward is activated
+     * @return false It will not receive old messages
+     */
+    bool is_sf(const uint topic) {
+        auto it = topics.find(topic);
+        if (it != topics.end()) {
+            return it->second.second == 1;
+        }
+        return false;
     }
 
     /**
@@ -191,10 +218,12 @@ class User {
     uint get_last_id(const uint topic) const { return topics.at(topic).first; }
 
     /**
-     * @brief Increment the id of the last message sent on the specified topic
+     * @brief set the id of the last message sent on the specified topic
      * @param topic The topic
      */
-    void sent_message(const uint topic) { topics[topic].first++; }
+    void sent_message_set(const uint topic, const uint id) {
+        topics[topic].first = id;
+    }
 
     /**
      * @brief A function that is called when the user disconnected

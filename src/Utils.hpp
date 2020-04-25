@@ -71,6 +71,7 @@
 
 // Server settings
 #define ENABLE_LOGS false
+#define DATABASE_FOLDER "./data/"
 
 // Server constants
 #define MAX_CLIENTS UINT32_MAX
@@ -80,7 +81,8 @@
 #define TOPIC_LENGTH 50
 #define UDP_MSG_SIZE 1551
 #define UDP_PAYLOAD_SIZE 1500
-#define TCP_MSG_SIZE 1552
+#define TCP_MSG_SIZE sizeof(tcp_message)
+#define TCP_DATA_DATA 1596
 #define TCP_DATA_SUBSCRIBE sizeof(tcp_subscribe)
 #define TCP_DATA_UNSUBSCRIBE sizeof(tcp_unsubscribe)
 #define TCP_DATA_CONFIRM_U sizeof(tcp_confirm_u)
@@ -146,7 +148,7 @@ void safe_cpy(char *dst, const char *src, size_t size) {
  * @param msg The message to be printed
  */
 void console_log(const std::string &msg) {
-    if (!ENABLE_LOGS) {
+    if (ENABLE_LOGS) {
         std::cout << msg;
     }
 }

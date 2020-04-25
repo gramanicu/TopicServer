@@ -117,11 +117,25 @@ class Server {
         ss << ntohs(client_addr.sin_port) << " - ";
 
         if (msg_size > 0) {
-            ss << msg.print() << "\n";
-            db.topic_new_message(db.get_topic_id(msg.topic), ss.str());
-            console_log(ss.str());
+            ss << msg.print();
+            int topic_id = db.get_topic_id(msg.topic);
+            if (topic_id == -1) {
+                // Add the topic if it didn't exist
+                topic_id = db.add_topic(msg.topic);
+            }
 
-            // TODO - send the message forward to the clients that require it
+            // Store the message
+            db.topic_new_message(topic_id, ss.str());
+
+            // Show the message on the server (if logs are enabled)
+            console_log(ss.str() + "\n");
+
+            // Send the message to the clients
+            for (User &u : db.get_subscribed_users(topic_id)) {
+                if (u.is_online()) {
+                    send_message_on_topic(topic_id, ss.str(), u);
+                }
+            }
         }
     }
 
@@ -153,25 +167,51 @@ class Server {
                     User user = User(
                         data.name, std::string(inet_ntoa(client_addr.sin_addr)),
                         sockfd, ntohs(client_addr.sin_port));
+                    std::string user_id = user.get_id();
 
                     if (!db.user_exists(data.name)) {
                         // New user - add him to the database
                         db.add_user(user);
 
-                        std::cout << "New client " << user.get_id()
+                        std::cout << "New client " << user_id
                                   << " connected from " << user.get_ip() << ":"
                                   << user.get_port() << ".\n";
                     } else {
                         // Reconnected - just update the adress and port
-                        std::cout << "Reconnected client " << user.get_id()
+                        std::cout << "Reconnected client " << user_id
                                   << " from " << user.get_ip() << ":"
                                   << user.get_port() << ".\n";
-                        if (db.user_exists(user.get_id())) {
-                            db.get_user(user.get_id()) = user;
-                        }
-                        // TODO - send subscribed topics
 
-                        // TODO - sent queued messages
+                        // Update the user data
+                        User &u = db.get_user(user_id);
+                        u.set_socket(sockfd);
+                        u.set_status(U_ONLINE);
+                        u.set_port(user.get_port());
+                        u.set_ip(user.get_ip());
+
+                        // TODO - Send subscribed topics
+
+                        // Send queued messages
+                        for (uint t : db.get_topics()) {
+                            // If Store-Forward is active
+                            if (u.is_sf(t)) {
+                                uint last_id = u.get_last_id(t);
+
+                                Topic topic(db.get_topic(t));
+
+                                // If there are unsent messages on the topic
+                                if (last_id < topic.get_last_id()) {
+                                    uint curr_id = last_id + 1;
+                                    for (auto &msg : topic.get_messages(
+                                             last_id + 1,
+                                             topic.get_last_id())) {
+                                        send_message_on_topic(t, msg, u,
+                                                              curr_id);
+                                        curr_id++;
+                                    }
+                                }
+                            }
+                        }
                     }
                 } break;
                 case tcp_msg_type::SUBSCRIBE: {
@@ -185,7 +225,8 @@ class Server {
                     // Subscribe the client
                     int id = db.get_topic_id(data.topic);
                     if (id != -1) {
-                        db.get_user(sockfd).subscribe(id, data.sf);
+                        db.get_user(sockfd).subscribe(
+                            id, data.sf, db.get_topic(id).get_last_id());
                     }
 
                     // Send the id of the topic to the client
@@ -249,6 +290,28 @@ class Server {
         CERR(send(sockfd, &msg, TCP_DATA_CONFIRM_U + 1, 0) < 0);
     }
 
+    void send_message_on_topic(const uint topic_id, const std::string &message,
+                               User &u, const uint message_id = 0) {
+        // Send message to all online clients that are subscribed to the topic
+        tcp_message msg;
+        tcp_data data;
+        bzero(&msg, TCP_MSG_SIZE);
+        bzero(&data, TCP_DATA_DATA);
+
+        safe_cpy(data.payload, message.c_str(), message.size());
+
+        msg.type = tcp_msg_type::DATA;
+        memcpy(msg.payload, &data, TCP_DATA_DATA);
+
+        // Send the message forward to the online users
+        if (message_id == 0) {
+            u.sent_message_set(topic_id, db.get_topic(topic_id).get_last_id());
+        } else {
+            u.sent_message_set(topic_id, message_id);
+        }
+        CERR(send(u.get_socket(), &msg, TCP_DATA_DATA + 1, 0) < 0);
+    }
+
     /**
      * @brief This function manages new TCP connections
      */
@@ -308,7 +371,6 @@ class Server {
 
         // Close all client sockets
         for (User &usr : db.get_online_users()) {
-            std::cout << usr.get_socket() << "\n";
             close_skt(usr.get_socket());
         }
 

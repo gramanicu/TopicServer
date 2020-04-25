@@ -35,7 +35,63 @@ class Topic {
     lint last_message_id;
     std::queue<std::string> messages;
 
+    /**
+     * @brief Get the id from a message
+     * @param msg The message
+     * @return uint Its id
+     */
+    uint get_message_id(const std::string& msg) {
+        std::istringstream ss(msg);
+        std::string id;
+        ss >> id;
+        return atoi(id.c_str());
+    }
+
+    /**
+     * @brief Return the message with the specified id (from the memory or the
+     * filesystem)
+     * @param msg_id The id of the message
+     * @return std::string The message
+     */
+    std::string get_message(const uint msg_id) {
+        // If the id we search is smaller than the oldest message from the
+        // queue, it means we can find it in the file
+        std::string first_msg = messages.front();
+
+        if (get_message_id(first_msg) > msg_id) {
+            std::ifstream in(DATABASE_FOLDER + name);
+
+            std::string data;
+            while (std::getline(in, data)) {
+                if (get_message_id(data) == msg_id) {
+                    return data;
+                }
+            }
+        } else {
+            // The message is in the memory
+            std::queue<std::string> other = messages;
+            while (!other.empty()) {
+                if (get_message_id(other.front()) == msg_id) {
+                    return other.front();
+                } else {
+                    other.pop();
+                }
+            }
+        }
+
+        return "";
+    }
+
    public:
+    Topic()
+        : id(0),
+          name(""),
+          last_message_id(0),
+          messages(std::queue<std::string>()) {
+        Filesystem fs;
+        fs.createFile(DATABASE_FOLDER);
+    }
+
     /**
      * @brief Construct a new topic
      * Also, create the file that will store this topic's messages
@@ -48,7 +104,19 @@ class Topic {
           last_message_id(0),
           messages(std::queue<std::string>()) {
         Filesystem fs;
-        fs.createFile("./data/" + name);
+        fs.createFile(DATABASE_FOLDER + name);
+    }
+
+    /**
+     * @brief Copy constructor
+     * @param other Another Topic object
+     */
+    Topic(const Topic& other)
+        : id(other.id),
+          name(other.name),
+          last_message_id(other.last_message_id),
+          messages(other.messages) {
+        // It doesn't need to create any new file
     }
 
     uint get_id() const { return id; }
@@ -58,7 +126,7 @@ class Topic {
     void add_message(std::string message) {
         // If there are too many messages in the stack, store excess messages in
         // file
-        std::ofstream out("./data/" + name,
+        std::ofstream out(DATABASE_FOLDER + name,
                           std::ios_base::app | std::ios_base::out);
         if (messages.size() == MAX_TOPIC_LINES) {
             // Store a quarter of the messages
@@ -69,14 +137,15 @@ class Topic {
             out.close();
         }
 
-        messages.push(message);
+        out.close();
+        messages.push(std::to_string(last_message_id++) + " " + message);
     }
 
     /**
      * @brief Store all data into files. Will remove it from memory
      */
     void save() {
-        std::ofstream out("./data/" + name,
+        std::ofstream out(DATABASE_FOLDER + name,
                           std::ios_base::app | std::ios_base::out);
         // Store a quarter of the messages
         while (!messages.empty()) {
@@ -86,6 +155,47 @@ class Topic {
         out.close();
     }
 
+    /**
+     * @brief Returns all the messages with id's in the specified range
+     * @param start The smaller id
+     * @param finish The greater id
+     * @return std::vector<std::string> An array of messages
+     */
+    std::vector<std::string> get_messages(uint start, uint finish) {
+        std::vector<std::string> v;
+
+        // Make the range valid if it isn't
+        if (start > finish) {
+            std::swap(start, finish);
+        }
+
+        if (finish > last_message_id) {
+            finish = last_message_id;
+        }
+
+        // Get all messages from the range
+        for (uint i = start; i <= finish; ++i) {
+            // Remove the message id from the messages
+            std::string msg = get_message(i);
+            int pos = msg.find_first_of(' ');
+            if (msg != "") {
+                v.push_back(msg.substr(pos + 1));
+            }
+        }
+
+        return v;
+    }
+
+    /**
+     * @brief Get the last message on the topic
+     * @return std::string The message
+     */
     std::string get_last_message() const { return messages.front(); }
+
+    /**
+     * @brief Get the id of the last message
+     * @return uint The message id
+     */
+    uint get_last_id() const { return last_message_id; }
 };
 }  // namespace application

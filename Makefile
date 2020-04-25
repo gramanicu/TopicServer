@@ -42,13 +42,11 @@ build_subscriber: ./src/Subscriber.o
 run_server: clean build_server
 	@echo "Started server"
 	@./server $(PORT)
-	-@rm -f server subscriber
 
 # Runs the server
 run_subscriber: clean build_subscriber
 	@echo "Started subscriber"
 	@./subscriber $(USERNAME) $(IP) $(PORT)
-	-@rm -f server subscriber
 
 # Test the project
 test: $(TOBJ)
@@ -74,8 +72,11 @@ beauty:
 
 # Checks the memory for leaks
 MFLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes
-memory:clean build
+memory:clean build_server
 	valgrind $(MFLAGS) ./server $(PORT)
+
+memory_sub: clean build_subscriber
+	valgrind $(MFLAGS) ./subscriber $(USERNAME) $(IP) $(PORT)
 
 # Adds and updates gitignore rules
 gitignore:
@@ -94,6 +95,10 @@ pack: clean
 # Starts an udp client that will send data on different topics
 udp_client:	
 	python3 ./checker/udp_client.py --source-port 1234 --input_file ./checker/sample_payloads.json --delay 10 --mode all_once $(IP) $(PORT)
+
+# Starts an udp client that will wait for the user to select what data to send
+udp_manual_client:	
+	python3 ./checker/udp_client.py --source-port 1234 --input_file ./checker/sample_payloads.json --delay 10 --mode manual $(IP) $(PORT)
 
 # Git repository statistics (line count)
 statistics:

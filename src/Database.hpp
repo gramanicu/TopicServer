@@ -118,14 +118,14 @@ class Database {
     }
 
     /**
-     * @brief Get a vector with all users subscribed to the speicified topic
+     * @brief Get a vector with all users subscribed to the specified topic
      * @param topic The topic
      * @return std::vector<User> The subscribed users
      */
-    std::vector<User> get_subscribed_users(const Topic& topic) {
+    std::vector<User> get_subscribed_users(const uint topic) {
         std::vector<User> v;
         for (auto i : userList) {
-            if (i.second.is_subscribed(topic.get_id())) {
+            if (i.second.is_subscribed(topic)) {
                 v.push_back(i.second);
             }
         }
@@ -209,8 +209,26 @@ class Database {
     }
 
     /**
+     * @brief Return the id's of all existing topics
+     * @return std::vector<uint> The vector of id's
+     */
+    std::vector<uint> get_topics() {
+        std::vector<uint> v;
+        for (auto& i : topics) {
+            v.push_back(i.first);
+        }
+        return v;
+    }
+
+    /**
+     * @brief Get the topic with the specified id
+     * @param id The id
+     * @return Topic& The topic
+     */
+    Topic& get_topic(const uint id) { return topics[id]; }
+
+    /**
      * @brief Return the name of a topic
-     * Will return " " if the id was not sent by the server
      * @param id The id of the topic
      * @return std::string The name of the topic
      */
@@ -226,9 +244,8 @@ class Database {
 
     /**
      * @brief Return the id of a topic
-     * Will return -1 if the topic id was not sent by the server
      * @param name The name of the topic
-     * @return int The id of the topic
+     * @return uint The id of the topic
      */
     int get_topic_id(const std::string& name) {
         auto it = std::find_if(
@@ -247,7 +264,6 @@ class Database {
      * @param message The message
      */
     void topic_new_message(uint id, std::string message) {
-        // TODO - create topic if it doesn't exist
         auto it = topics.find(id);
         if (it != topics.end()) {
             it->second.add_message(message);
@@ -267,14 +283,16 @@ class Database {
      * @brief Add a new topic to the list
      * @param name The name of the topic
      * The id is automatically assigned
+     * @return int The id of the new topic
      */
-    void add_topic(const std::string& name) {
+    uint add_topic(const std::string& name) {
         // If the topic doesn't exist already
         if (get_topic_id(name) == -1) {
             topics.insert(
                 std::make_pair(max_topic_id, Topic(max_topic_id, name)));
             max_topic_id++;
         }
+        return max_topic_id - 1;
     }
 };
 }  // namespace application

@@ -77,12 +77,15 @@ class Subscriber {
         FD_ZERO(&tmp_fds);
     }
 
+#pragma GCC push_options  // Disable optimisations for this function
+#pragma GCC optimize("-O0")
     /**
      * @brief Connect to server and send client info
      */
     void init_connection() {
         // Connect to the server
-        CERR(connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)));
+        MUST(connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)) == 0,
+             "Couldn't connect to the server");
 
         // Set the file descriptors for the sockets
         FD_SET(sockfd, &read_fds);
@@ -101,6 +104,7 @@ class Subscriber {
         // Send the client info
         CERR(send(sockfd, &msg, TCP_DATA_CONNECT + 1, 0) < 0);
     }
+#pragma GCC pop_options
 
     /**
      * @brief Read TCP messages received from the srver
@@ -131,11 +135,10 @@ class Subscriber {
                     // If it was requested by this process, and not sent
                     // because the user was previously subscribed to it
                     auto it = queuedTopics.find(data.topic);
-                    if(it != queuedTopics.end()) {
+                    if (it != queuedTopics.end()) {
                         queuedTopics.erase(it);
 
                         std::cout << "Subscribed " << data.topic << "\n";
-                        std::cout << data.id << "\n";
                     }
                 } break;
                 case tcp_msg_type::CONFIRM_U: {
@@ -145,10 +148,13 @@ class Subscriber {
                     memcpy(&data, msg.payload, TCP_DATA_CONFIRM_U);
 
                     std::cout << "Unsubscribed " << topics[data.topic] << "\n";
-                    std::cout << data.topic << "\n";
                     topics.erase(data.topic);
-                }
+                } break;
                 case tcp_msg_type::DATA: {
+                    tcp_data data;
+                    bzero(&data, TCP_DATA_DATA);
+                    memcpy(&data, msg.payload, TCP_DATA_DATA);
+                    std::cout << data.payload << "\n";
                 } break;
                 default:
                     break;

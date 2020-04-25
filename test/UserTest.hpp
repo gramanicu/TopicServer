@@ -29,9 +29,8 @@ class UserTest : public Test {
    public:
     bool run_tests() {
         return test_offline() && test_online() && test_id() &&
-               test_subscribe() && test_store() && test_messages() &&
-               test_unsubscribe() && test_id() && test_ip() && test_port() &&
-               test_id_change();
+               test_subscribe() && test_store() && test_unsubscribe() &&
+               test_id() && test_ip() && test_port() && test_id_change();
     }
 
    private:
@@ -64,16 +63,6 @@ class UserTest : public Test {
     bool test_store() {
         return ASSERT_FALSE(user.get_store(topic),
                             "The user shouldn't receive unsent messages\n");
-    }
-
-    bool test_messages() {
-        user.sent_message(topic);
-        user.sent_message(topic);
-        user.sent_message(topic);
-        user.sent_message(topic);
-
-        return ASSERT_EQUALS(user.get_last_id(topic), lastmessage + 4,
-                             "The number of messages should have changed\n");
     }
 
     bool test_unsubscribe() {
