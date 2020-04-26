@@ -221,7 +221,6 @@ class Server {
                                     for (auto &msg : topic.get_messages(
                                              last_id + 1,
                                              topic.get_last_id())) {
-                                        
                                         nsleep(10);
                                         send_message_on_topic(
                                             t, msg, u.get_id(), curr_id);
@@ -400,7 +399,7 @@ class Server {
             if (errno == EACCES) {
                 console_log(
                     "You must run the server using administrator rights to "
-                    "disable neagle's algorithm\n");
+                    "disable nagle's algorithm\n");
             }
         }
 

@@ -272,7 +272,7 @@ class Subscriber {
             if (errno == EACCES) {
                 console_log(
                     "You must run the server using administrator rights to "
-                    "disable neagle's algorithm\n");
+                    "disable nagle's algorithm\n");
             }
         }
 

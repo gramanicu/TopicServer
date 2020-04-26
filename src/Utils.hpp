@@ -63,7 +63,7 @@
  * @brief Check if the error happens. If it does, print it
  */
 #define CERR(condition)                                   \
-    if (condition) {                                      \
+    if (condition && ENABLE_LOGS) {                       \
         std::cerr << __FILE__ << ", " << __LINE__ << ": " \
                   << std::strerror(errno) << "\n";        \
     }
