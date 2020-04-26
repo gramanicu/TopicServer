@@ -61,7 +61,7 @@ test: $(TOBJ)
 
 # Deletes the binary and object files
 clean:
-	rm -f server subscriber $(OBJ) TopicServer.zip
+	rm -f server subscriber $(OBJ)
 	rm -rfd  data/*
 	echo "Deleted the binary and object files"
 
