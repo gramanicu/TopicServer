@@ -16,7 +16,7 @@ TST = $(wildcard test/*.cpp)
 TOBJ = $(TST:.cpp=.o)
 
 IP = 127.0.0.1
-PORT = 8081
+PORT = 8080
 USERNAME = Rockyn
 
 # Compiles the programs

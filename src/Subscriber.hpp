@@ -85,7 +85,7 @@ class Subscriber {
     void init_connection() {
         // Connect to the server
         MUST(connect(sockfd, (sockaddr*)&server_addr, sizeof(server_addr)) == 0,
-             "Couldn't connect to the server");
+             "Couldn't connect to the server\n");
 
         // Set the file descriptors for the sockets
         FD_SET(sockfd, &read_fds);
@@ -95,9 +95,10 @@ class Subscriber {
 
         // Send client info
         tcp_message msg;
-        bzero(&msg, TCP_MSG_SIZE);
-        msg.type = tcp_msg_type::CONNECT;
         tcp_connect data;
+        bzero(&msg, TCP_MSG_SIZE);
+        bzero(&data, TCP_DATA_CONNECT);
+        msg.type = tcp_msg_type::CONNECT;
 
         safe_cpy(data.name, client_id.c_str(), client_id.size());
         memcpy(msg.payload, &data, TCP_DATA_CONNECT);
@@ -163,7 +164,7 @@ class Subscriber {
         return false;
     }
 
-    /**
+    /**W
      * @brief Read input from stdin
      * Will return whether the program should close.
      * @return true Close the program
@@ -183,22 +184,28 @@ class Subscriber {
             // If the second argument is greater than 1, the value will be true
             std::cin >> topic >> sf;
 
-            // Send the subscribe request
-            tcp_message msg;
-            bzero(&msg, sizeof(msg));
+            // Check that topic is valid
+            if (topic.size() >= 50) {
+                console_log("Invalid topic size\n");
+            } else {
+                // Send the subscribe request
+                tcp_message msg;
+                tcp_subscribe data;
+                bzero(&msg, TCP_MSG_SIZE);
+                bzero(&data, TCP_DATA_SUBSCRIBE);
 
-            tcp_subscribe data;
-            data.sf = sf;
-            safe_cpy(data.topic, topic.c_str(), topic.size());
+                data.sf = sf;
+                safe_cpy(data.topic, topic.c_str(), topic.size());
 
-            msg.type = tcp_msg_type::SUBSCRIBE;
-            memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
+                msg.type = tcp_msg_type::SUBSCRIBE;
+                memcpy(msg.payload, &data, TCP_DATA_SUBSCRIBE);
 
-            // Send the client info
-            CERR(send(sockfd, &msg, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
+                // Send the client info
+                CERR(send(sockfd, &msg, TCP_DATA_SUBSCRIBE + 1, 0) < 0);
 
-            // Mark this topic as "requested by the client, waiting id"
-            queuedTopics.insert(data.topic);
+                // Mark this topic as "requested by the client, waiting id"
+                queuedTopics.insert(data.topic);
+            }
         } else if (command == "unsubscribe") {
             // Unsubscribe
             std::string topic;
@@ -206,12 +213,16 @@ class Subscriber {
 
             // Send client info
             tcp_message msg;
-            msg.type = tcp_msg_type::UNSUBSCRIBE;
             tcp_unsubscribe data;
+            bzero(&msg, TCP_MSG_SIZE);
+            bzero(&data, TCP_DATA_UNSUBSCRIBE);
+
+            msg.type = tcp_msg_type::UNSUBSCRIBE;
 
             int id = get_topic_id(topic);
 
             // If the topic was actually subscribed to
+            // This is also a simple way to verify input
             if (id != -1) {
                 data.topic = id;
                 memcpy(msg.payload, &data, TCP_DATA_UNSUBSCRIBE);
@@ -241,9 +252,17 @@ class Subscriber {
 
         // Set the socket options
         const int opt = 1;
-        MUST(
-            setsockopt(sockfd, SOL_SOCKET, TCP_NODELAY, &opt, sizeof(opt) == 0),
-            "Couldn't set socket options\n");
+        int neagle_res =
+            setsockopt(sockfd, SOL_SOCKET, TCP_NODELAY, &opt, sizeof(opt));
+        CERR(neagle_res != 0);
+
+        if (neagle_res != 0) {
+            if (errno == EACCES) {
+                console_log(
+                    "You must run the server using administrator rights to "
+                    "disable neagle's algorithm\n");
+            }
+        }
 
         // Set the server adress
         server_addr.sin_family = AF_INET;

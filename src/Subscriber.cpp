@@ -39,6 +39,9 @@ int main(int argc, char *argv[]) {
     uint port = atoi(argv[3]);
     MUST(port, require_params());
 
+    // Check if the id is valid
+    MUST(strlen(argv[1]) < 11, "Invalid ID (max 10 chars)\n");
+
     application::Subscriber subscriber(std::string(argv[1]), argv[2], port);
     subscriber.run();
 

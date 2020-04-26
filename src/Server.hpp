@@ -343,11 +343,14 @@ class Server {
         // Initialise the main TCP socket
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         CERR(sock < 0);
+        MUST(sock >= 0, "Couldn't create main TCP socket\n");
+
         main_tcp_sock = sock;
 
         // Initialise the UDP socket
         sock = socket(AF_INET, SOCK_DGRAM, 0);
         CERR(sock < 0);
+        MUST(sock >= 0, "Couldn't create UDP socket\n");
         udp_sock = sock;
 
         // Clear the file descriptors sets
@@ -355,9 +358,27 @@ class Server {
 
         // Set the socket options
         const int opt = 1;
-        MUST(setsockopt(main_tcp_sock, SOL_SOCKET, TCP_NODELAY, &opt,
-                        sizeof(opt) == 0),
-             "Couldn't set master socket options\n");
+        int neagle_res = setsockopt(main_tcp_sock, SOL_SOCKET, TCP_NODELAY,
+                                    (const char *)&opt, sizeof(opt));
+        CERR(neagle_res != 0);
+
+        if (neagle_res != 0) {
+            if (errno == EACCES) {
+                console_log(
+                    "You must run the server using administrator rights to "
+                    "disable neagle's algorithm\n");
+            }
+        }
+
+        // Next two options are used to be able to restart the server on the
+        // same port without waiting for TCP_WAIT to expire
+        CERR(setsockopt(main_tcp_sock, SOL_SOCKET, SO_REUSEADDR,
+                        (const char *)&opt, sizeof(opt)) != 0);
+
+#ifdef SO_REUSEPORT
+        CERR(setsockopt(main_tcp_sock, SOL_SOCKET, SO_REUSEPORT,
+                        (const char *)&opt, sizeof(opt)) != 0);
+#endif
 
         // Set the listen adress
         listen_addr.sin_family = AF_INET;
