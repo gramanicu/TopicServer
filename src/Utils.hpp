@@ -153,3 +153,14 @@ void console_log(const std::string &msg) {
         std::cout << msg;
     }
 }
+
+/**
+ * @brief Sleep for the specified time in nanoseconds
+ * @param nanoseconds
+ */
+void nsleep(long nanoseconds) {
+    timespec slptm;
+    slptm.tv_sec = 0;
+    slptm.tv_nsec = nanoseconds;
+    nanosleep(&slptm, NULL);
+}

@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     MUST(port, require_params());
 
     // Check if the id is valid
-    MUST(strlen(argv[1]) < 11, "Invalid ID (max 10 chars)\n");
+    MUST(strnlen(argv[1], 10) < 11, "Invalid ID (max 10 chars)\n");
 
     application::Subscriber subscriber(std::string(argv[1]), argv[2], port);
     subscriber.run();

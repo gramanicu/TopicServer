@@ -123,7 +123,7 @@ class Topic {
 
     std::string get_name() const { return name; }
 
-    void add_message(std::string message) {
+    void add_message(const std::string& message) {
         // If there are too many messages in the stack, store excess messages in
         // file
         std::ofstream out(DATABASE_FOLDER + name,

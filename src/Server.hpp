@@ -201,7 +201,7 @@ class Server {
                                 // This inexistant delay actually helps the code
                                 // so that the client will receive all the
                                 // messages
-                                usleep(0);
+                                nsleep(10);
                                 send_topic_id(sockfd, db.get_topic_name(t));
                             }
                         }
@@ -221,9 +221,10 @@ class Server {
                                     for (auto &msg : topic.get_messages(
                                              last_id + 1,
                                              topic.get_last_id())) {
-                                        usleep(0);
-                                        send_message_on_topic(t, msg, u.get_id(),
-                                                              curr_id);
+                                        
+                                        nsleep(10);
+                                        send_message_on_topic(
+                                            t, msg, u.get_id(), curr_id);
                                         curr_id++;
                                     }
                                 }
@@ -320,14 +321,15 @@ class Server {
     }
 
     void send_message_on_topic(const uint topic_id, const std::string &message,
-                               const std::string& user_id, const uint message_id = 0) {
+                               const std::string &user_id,
+                               const uint message_id = 0) {
         // Send message to all online clients that are subscribed to the topic
         tcp_message msg;
         tcp_data data;
         bzero(&msg, TCP_MSG_SIZE);
         bzero(&data, TCP_DATA_DATA);
 
-        User& u = db.get_user(user_id);
+        User &u = db.get_user(user_id);
 
         safe_cpy(data.payload, message.c_str(), message.size());
 
