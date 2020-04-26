@@ -131,6 +131,7 @@ class Subscriber {
                     tcp_topic_id data;
                     bzero(&data, TCP_DATA_TOPICID);
                     memcpy(&data, msg.payload, TCP_DATA_TOPICID);
+
                     topics.insert(std::make_pair(data.id, data.topic));
 
                     // If it was requested by this process, and not sent
@@ -157,6 +158,10 @@ class Subscriber {
                     memcpy(&data, msg.payload, TCP_DATA_DATA);
                     std::cout << data.payload << "\n";
                 } break;
+                case tcp_msg_type::CONNECT_DUP: {
+                    MUST(false, "This user id is already in use\n");
+                    return true;
+                }
                 default:
                     break;
             }
@@ -178,11 +183,18 @@ class Subscriber {
             return true;
         } else if (command == "subscribe") {
             // Subscribe
-            std::string topic;
+            std::string topic, sf_string;
             bool sf;
-            // If the second argument is not a number, the value will be false
-            // If the second argument is greater than 1, the value will be true
-            std::cin >> topic >> sf;
+            std::cin >> topic >> sf_string;
+
+            if (sf_string == "0") {
+                sf = false;
+            } else if (sf_string == "1") {
+                sf = true;
+            } else {
+                // Invalid input, but program can continue
+                return false;
+            }
 
             // Check that topic is valid
             if (topic.size() >= 50) {

@@ -5,7 +5,7 @@
 
 # Compilation variables
 CC = g++
-CFLAGS = -lstdc++fs -lpthread -Wno-unknown-pragmas -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
+CFLAGS = -lstdc++fs -Wno-unknown-pragmas -Wno-unused-parameter -Wall -Wextra -pedantic -g -O3 -std=c++17
 INCLUDE = src
 
 SRC = $(wildcard src/*.cpp)
@@ -44,7 +44,7 @@ run_server: clean build_server
 	@./server $(PORT)
 
 # Runs the server
-run_subscriber: clean build_subscriber
+run_subscriber: build_subscriber
 	@echo "Started subscriber"
 	@./subscriber $(USERNAME) $(IP) $(PORT)
 

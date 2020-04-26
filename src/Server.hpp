@@ -35,9 +35,6 @@ class Server {
     sockaddr_in listen_addr;
     Database db;
 
-    // The database that links topic names to their id's
-    std::unordered_map<uint, std::string> topics;
-
     /**
      * @brief Clear the file descriptors
      */
@@ -133,7 +130,7 @@ class Server {
             // Send the message to the clients
             for (User &u : db.get_subscribed_users(topic_id)) {
                 if (u.is_online()) {
-                    send_message_on_topic(topic_id, ss.str(), u);
+                    send_message_on_topic(topic_id, ss.str(), u.get_id());
                 }
             }
         }
@@ -177,19 +174,37 @@ class Server {
                                   << " connected from " << user.get_ip() << ":"
                                   << user.get_port() << ".\n";
                     } else {
+                        User &u = db.get_user(user_id);
+                        // Check if the user isn't already connected
+                        if (u.is_online()) {
+                            send_connection_dup(sockfd);
+                            return;
+                        }
+
                         // Reconnected - just update the adress and port
                         std::cout << "Reconnected client " << user_id
                                   << " from " << user.get_ip() << ":"
                                   << user.get_port() << ".\n";
 
                         // Update the user data
-                        User &u = db.get_user(user_id);
                         u.set_socket(sockfd);
                         u.set_status(U_ONLINE);
                         u.set_port(user.get_port());
                         u.set_ip(user.get_ip());
 
-                        // TODO - Send subscribed topics
+                        // Send subscribed topics
+                        for (uint t : db.get_topics()) {
+                            // If the user is subscribed to the topic, send to
+                            // subscriber the info
+
+                            if (u.is_subscribed(t)) {
+                                // This inexistant delay actually helps the code
+                                // so that the client will receive all the
+                                // messages
+                                usleep(0);
+                                send_topic_id(sockfd, db.get_topic_name(t));
+                            }
+                        }
 
                         // Send queued messages
                         for (uint t : db.get_topics()) {
@@ -202,10 +217,12 @@ class Server {
                                 // If there are unsent messages on the topic
                                 if (last_id < topic.get_last_id()) {
                                     uint curr_id = last_id + 1;
+
                                     for (auto &msg : topic.get_messages(
                                              last_id + 1,
                                              topic.get_last_id())) {
-                                        send_message_on_topic(t, msg, u,
+                                        usleep(0);
+                                        send_message_on_topic(t, msg, u.get_id(),
                                                               curr_id);
                                         curr_id++;
                                     }
@@ -250,6 +267,18 @@ class Server {
     }
 
     /**
+     * @brief Notify the client that that a user with the same id is already
+     * connected
+     * @param sockfd The socket of the client
+     */
+    void send_connection_dup(const uint sockfd) {
+        tcp_message msg;
+        bzero(&msg, TCP_MSG_SIZE);
+        msg.type = tcp_msg_type::CONNECT_DUP;
+        CERR(send(sockfd, &msg, 1, 0) < 0);
+    }
+
+    /**
      * @brief Send the id of a topic to the client connected to the specified
      * sockfd
      * @param sockfd The socket file descriptor
@@ -291,24 +320,27 @@ class Server {
     }
 
     void send_message_on_topic(const uint topic_id, const std::string &message,
-                               User &u, const uint message_id = 0) {
+                               const std::string& user_id, const uint message_id = 0) {
         // Send message to all online clients that are subscribed to the topic
         tcp_message msg;
         tcp_data data;
         bzero(&msg, TCP_MSG_SIZE);
         bzero(&data, TCP_DATA_DATA);
 
+        User& u = db.get_user(user_id);
+
         safe_cpy(data.payload, message.c_str(), message.size());
 
         msg.type = tcp_msg_type::DATA;
         memcpy(msg.payload, &data, TCP_DATA_DATA);
 
-        // Send the message forward to the online users
+        // Set the last message id of the user
         if (message_id == 0) {
             u.sent_message_set(topic_id, db.get_topic(topic_id).get_last_id());
         } else {
             u.sent_message_set(topic_id, message_id);
         }
+
         CERR(send(u.get_socket(), &msg, TCP_DATA_DATA + 1, 0) < 0);
     }
 

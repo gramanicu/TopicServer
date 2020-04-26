@@ -32,7 +32,7 @@ class Topic {
    private:
     uint id;
     std::string name;
-    lint last_message_id;
+    long last_message_id;
     std::queue<std::string> messages;
 
     /**
@@ -86,7 +86,7 @@ class Topic {
     Topic()
         : id(0),
           name(""),
-          last_message_id(0),
+          last_message_id(-1),
           messages(std::queue<std::string>()) {
         Filesystem fs;
         fs.createFile(DATABASE_FOLDER);
@@ -101,7 +101,7 @@ class Topic {
     Topic(const uint id, const std::string& name)
         : id(id),
           name(name),
-          last_message_id(0),
+          last_message_id(-1),
           messages(std::queue<std::string>()) {
         Filesystem fs;
         fs.createFile(DATABASE_FOLDER + name);
@@ -138,7 +138,8 @@ class Topic {
         }
 
         out.close();
-        messages.push(std::to_string(last_message_id++) + " " + message);
+        last_message_id++;
+        messages.push(std::to_string(last_message_id) + " " + message);
     }
 
     /**
@@ -195,7 +196,8 @@ class Topic {
     /**
      * @brief Get the id of the last message
      * @return uint The message id
+     * Id is -1 when there are no messages on the topic
      */
-    uint get_last_id() const { return last_message_id; }
+    long get_last_id() const { return last_message_id; }
 };
 }  // namespace application

@@ -38,7 +38,6 @@
 #include <set>
 #include <stack>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -108,6 +107,7 @@ enum udp_msg_type { INT, SHORT_REAL, FLOAT, STRING };
  * CONNECT - client->server - client connect request and his info (id, etc.)
  * CONFIRM_U - server->client - servers confirms that the client was
  * unsubscribed
+ * CONNECT_DUP - server->client - notifies that the client is already connected
  */
 enum tcp_msg_type {
     DATA,
@@ -115,7 +115,8 @@ enum tcp_msg_type {
     UNSUBSCRIBE,
     TOPIC_ID,
     CONNECT,
-    CONFIRM_U
+    CONFIRM_U,
+    CONNECT_DUP
 };
 
 // Compute power y of x in O(Log y)
